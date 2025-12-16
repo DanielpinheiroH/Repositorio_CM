@@ -1,236 +1,297 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ProjetoConteudo } from "../domain/models";
-import { NAV, type CanalKey, type TipoKey } from "../domain/contentTypes";
 
-type CreatePayload = Omit<ProjetoConteudo, "id" | "createdAt">;
+type Mode = "create" | "edit";
+
+type FormValue = Omit<ProjetoConteudo, "id" | "createdAt">;
 
 type Props = {
   open: boolean;
+  mode?: Mode;
+  initialValue?: Partial<FormValue> | null;
   onClose: () => void;
-  onSave: (payload: CreatePayload) => void;
+  onSave: (payload: FormValue) => void | Promise<void>;
+  saving?: boolean;
 };
 
-const CANAIS: Array<{ value: CanalKey; label: string }> = [
-  { value: "site", label: NAV.site.label },
-  { value: "youtube", label: NAV.youtube.label },
-  { value: "instagram", label: NAV.instagram.label },
-  { value: "tiktok", label: NAV.tiktok.label },
-  { value: "kwai", label: NAV.kwai.label },
-  { value: "facebook", label: NAV.facebook.label },
+const CANAIS = [
+  { value: "site", label: "Site/Portal" },
+  { value: "youtube", label: "YouTube" },
+  { value: "instagram", label: "Instagram" },
+  { value: "tiktok", label: "TikTok" },
+  { value: "kwai", label: "Kwai" },
+  { value: "facebook", label: "Facebook" },
 ];
 
-function tiposPorCanal(canal: CanalKey): Array<{ value: TipoKey; label: string }> {
-  const map: Record<string, Array<{ value: TipoKey; label: string }>> = {
-    site: NAV.site.items.map((i) => ({ value: i.tipo, label: i.label })),
-    youtube: NAV.youtube.items.map((i) => ({ value: i.tipo, label: i.label })),
-    instagram: NAV.instagram.items.map((i) => ({ value: i.tipo, label: i.label })),
-    tiktok: NAV.tiktok.items.map((i) => ({ value: i.tipo, label: i.label })),
-    kwai: NAV.kwai.items.map((i) => ({ value: i.tipo, label: i.label })),
-    facebook: NAV.facebook.items.map((i) => ({ value: i.tipo, label: i.label })),
-  };
-  return map[canal] || [];
+function tiposPorCanal(canal: string) {
+  if (canal === "site") {
+    return [
+      { value: "publieditorial", label: "Publieditorial" },
+      { value: "manchete", label: "Manchete" },
+      { value: "artigo-opiniao", label: "Artigo de opinião" },
+    ];
+  }
+  if (canal === "youtube") {
+    return [
+      { value: "talks", label: "TALKS" },
+      { value: "shorts", label: "SHORTS" },
+    ];
+  }
+  if (canal === "instagram") {
+    return [
+      { value: "feed-reels", label: "Feed & Reels" },
+      { value: "stories", label: "Stories" },
+    ];
+  }
+  // TikTok / Kwai / Facebook
+  return [{ value: "feed", label: "Feed" }];
 }
 
-export function NewProjectModal({ open, onClose, onSave }: Props) {
-  const [nomeProjeto, setNomeProjeto] = useState("");
-  const [canal, setCanal] = useState<CanalKey>("site");
-  const [tipo, setTipo] = useState<TipoKey>("publieditorial");
+const emptyForm: FormValue = {
+  nomeProjeto: "",
+  canal: "site" as any,
+  tipo: "publieditorial" as any,
+  visualizacoes: null,
+  segmento: "",
+  dataPublicacao: "",
+  cliente: "",
+  link: "",
+  descricao: "",
+};
 
-  const [visualizacoes, setVisualizacoes] = useState<string>("");
-  const [segmento, setSegmento] = useState("");
-  const [dataPublicacao, setDataPublicacao] = useState("");
-  const [cliente, setCliente] = useState("");
-  const [link, setLink] = useState("");
-  const [descricao, setDescricao] = useState("");
+export function NewProjectModal({
+  open,
+  mode = "create",
+  initialValue,
+  onClose,
+  onSave,
+  saving = false,
+}: Props) {
+  const [form, setForm] = useState<FormValue>(emptyForm);
 
-  const tipos = useMemo(() => tiposPorCanal(canal), [canal]);
+  useEffect(() => {
+    if (!open) return;
 
-  function reset() {
-    setNomeProjeto("");
-    setCanal("site");
-    setTipo("publieditorial");
-    setVisualizacoes("");
-    setSegmento("");
-    setDataPublicacao("");
-    setCliente("");
-    setLink("");
-    setDescricao("");
-  }
-
-  function close() {
-    reset();
-    onClose();
-  }
-
-  function submit() {
-    const nome = nomeProjeto.trim();
-    const ln = link.trim();
-
-    if (!nome) return alert("Informe o NOME DO PROJETO.");
-    if (!ln) return alert("Informe o LINK.");
-
-    const views = visualizacoes.trim() ? Number(visualizacoes) : null;
-    if (visualizacoes.trim() && (Number.isNaN(views) || (views ?? 0) < 0)) {
-      return alert("Visualizações precisa ser um número válido (>= 0).");
+    // Quando abre em modo edit, carrega valores
+    if (mode === "edit" && initialValue) {
+      const merged: FormValue = {
+        ...emptyForm,
+        ...initialValue,
+        // normaliza null/undefined pra string vazia em inputs
+        segmento: initialValue.segmento ?? "",
+        cliente: initialValue.cliente ?? "",
+        dataPublicacao: initialValue.dataPublicacao ?? "",
+        descricao: initialValue.descricao ?? "",
+        link: initialValue.link ?? "",
+        nomeProjeto: initialValue.nomeProjeto ?? "",
+        visualizacoes: initialValue.visualizacoes ?? null,
+        canal: (initialValue.canal ?? "site") as any,
+        tipo: (initialValue.tipo ?? "publieditorial") as any,
+      };
+      setForm(merged);
+      return;
     }
 
-    onSave({
-      nomeProjeto: nome,
-      canal,
-      tipo,
-      visualizacoes: views,
-      segmento: segmento.trim() || null,
-      dataPublicacao: dataPublicacao.trim() || null,
-      cliente: cliente.trim() || null,
-      link: ln,
-      descricao: descricao.trim() || null,
-    });
+    // create -> limpa
+    setForm(emptyForm);
+  }, [open, mode, initialValue]);
 
-    close();
-  }
+  const tipos = useMemo(() => tiposPorCanal(String(form.canal || "site")), [form.canal]);
+
+  // Se trocar canal e o tipo não existir mais, ajusta pro primeiro disponível
+  useEffect(() => {
+    if (!open) return;
+    const allowed = tipos.map((t) => t.value);
+    if (!allowed.includes(String(form.tipo))) {
+      setForm((prev) => ({ ...prev, tipo: allowed[0] as any }));
+    }
+  }, [open, tipos, form.tipo]);
 
   if (!open) return null;
 
+  const title = mode === "edit" ? "Editar Projeto" : "Novo Projeto";
+  const primaryLabel = mode === "edit" ? "Salvar alterações" : "Salvar";
+
+  function set<K extends keyof FormValue>(key: K, value: FormValue[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function submit() {
+    // validações mínimas
+    if (!form.nomeProjeto.trim()) {
+      alert("Informe o Nome do Projeto.");
+      return;
+    }
+    if (!String(form.canal || "").trim()) {
+      alert("Selecione o Canal/Página.");
+      return;
+    }
+    if (!String(form.tipo || "").trim()) {
+      alert("Selecione o Tipo.");
+      return;
+    }
+    if (!form.link.trim()) {
+      alert("Informe o Link.");
+      return;
+    }
+
+    onSave({
+      ...form,
+      nomeProjeto: form.nomeProjeto.trim(),
+      link: form.link.trim(),
+      segmento: form.segmento?.trim() || "",
+      cliente: form.cliente?.trim() || "",
+      descricao: form.descricao?.trim() || "",
+      dataPublicacao: form.dataPublicacao || "",
+      visualizacoes:
+        form.visualizacoes === null || form.visualizacoes === undefined || Number.isNaN(Number(form.visualizacoes))
+          ? null
+          : Number(form.visualizacoes),
+    });
+  }
+
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4">
-      <div className="w-full max-w-3xl rounded-2xl border border-zinc-800 bg-zinc-950 overflow-hidden">
-        <div className="flex items-start justify-between gap-4 p-4 border-b border-zinc-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60" onClick={saving ? undefined : onClose} />
+
+      <div className="relative w-full max-w-3xl rounded-2xl border border-zinc-800 bg-zinc-950 shadow-xl">
+        <div className="p-4 border-b border-zinc-800 flex items-center justify-between gap-3">
           <div>
-            <div className="text-white font-extrabold">Novo Projeto</div>
-            <div className="text-zinc-400 text-sm mt-1">
-              Ao salvar, ele entra direto na tela do canal/tipo selecionado.
+            <div className="text-white font-extrabold">{title}</div>
+            <div className="text-xs text-zinc-400 mt-1">
+              {mode === "edit"
+                ? "Edite os campos e salve para atualizar o registro."
+                : "Cadastre um exemplo comercial para seus executivos utilizarem em vendas."}
             </div>
           </div>
+
           <button
-            className="px-3 py-2 rounded-xl border border-zinc-800 text-zinc-200 hover:bg-white/5"
-            onClick={close}
+            className="px-3 py-2 rounded-xl border border-zinc-800 bg-white/5 hover:bg-white/10 disabled:opacity-60"
+            onClick={onClose}
+            disabled={saving}
           >
             Fechar
           </button>
         </div>
 
-        <div className="p-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2">
-              <label className="text-xs text-zinc-400">NOME DO PROJETO</label>
-              <input
-                className="mt-1 w-full"
-                value={nomeProjeto}
-                onChange={(e) => setNomeProjeto(e.target.value)}
-                placeholder="Ex.: Case Black Friday — Cliente X"
-              />
-            </div>
+        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="md:col-span-2">
+            <label className="text-xs text-zinc-400">Nome do Projeto</label>
+            <input
+              className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none"
+              value={form.nomeProjeto}
+              onChange={(e) => set("nomeProjeto", e.target.value)}
+              placeholder="Ex.: Publieditorial — Campanha X"
+            />
+          </div>
 
-            <div>
-              <label className="text-xs text-zinc-400">CANAL/PÁGINA</label>
-              <select
-                className="mt-1 w-full"
-                value={canal}
-                onChange={(e) => {
-                  const next = e.target.value as CanalKey;
-                  setCanal(next);
-                  const nextTipos = tiposPorCanal(next);
-                  setTipo(nextTipos[0]?.value ?? "feed");
-                }}
-              >
-                {CANAIS.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label className="text-xs text-zinc-400">Canal/Página</label>
+            <select
+              className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none"
+              value={String(form.canal)}
+              onChange={(e) => set("canal", e.target.value as any)}
+            >
+              {CANAIS.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div>
-              <label className="text-xs text-zinc-400">TIPO DO CANAL</label>
-              <select
-                className="mt-1 w-full"
-                value={tipo}
-                onChange={(e) => setTipo(e.target.value as TipoKey)}
-              >
-                {tipos.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label className="text-xs text-zinc-400">Tipo</label>
+            <select
+              className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none"
+              value={String(form.tipo)}
+              onChange={(e) => set("tipo", e.target.value as any)}
+            >
+              {tipos.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div>
-              <label className="text-xs text-zinc-400">VISUALIZAÇÕES</label>
-              <input
-                className="mt-1 w-full"
-                value={visualizacoes}
-                onChange={(e) => setVisualizacoes(e.target.value)}
-                placeholder="Ex.: 120000"
-                inputMode="numeric"
-              />
-            </div>
+          <div>
+            <label className="text-xs text-zinc-400">Visualizações</label>
+            <input
+              type="number"
+              className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none"
+              value={form.visualizacoes ?? ""}
+              onChange={(e) => set("visualizacoes", e.target.value === "" ? null : Number(e.target.value))}
+              placeholder="Ex.: 120000"
+            />
+          </div>
 
-            <div>
-              <label className="text-xs text-zinc-400">SEGMENTO</label>
-              <input
-                className="mt-1 w-full"
-                value={segmento}
-                onChange={(e) => setSegmento(e.target.value)}
-                placeholder="Ex.: Varejo, Saúde, Governo..."
-              />
-            </div>
+          <div>
+            <label className="text-xs text-zinc-400">Segmento</label>
+            <input
+              className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none"
+              value={form.segmento || ""}
+              onChange={(e) => set("segmento", e.target.value)}
+              placeholder="Ex.: Varejo, Educação, Saúde..."
+            />
+          </div>
 
-            <div>
-              <label className="text-xs text-zinc-400">DATA DA PUBLICAÇÃO</label>
-              <input
-                className="mt-1 w-full"
-                type="date"
-                value={dataPublicacao}
-                onChange={(e) => setDataPublicacao(e.target.value)}
-              />
-            </div>
+          <div>
+            <label className="text-xs text-zinc-400">Data da publicação</label>
+            <input
+              type="date"
+              className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none"
+              value={form.dataPublicacao || ""}
+              onChange={(e) => set("dataPublicacao", e.target.value)}
+            />
+          </div>
 
-            <div>
-              <label className="text-xs text-zinc-400">CLIENTE</label>
-              <input
-                className="mt-1 w-full"
-                value={cliente}
-                onChange={(e) => setCliente(e.target.value)}
-                placeholder="Ex.: Banco Y"
-              />
-            </div>
+          <div>
+            <label className="text-xs text-zinc-400">Cliente</label>
+            <input
+              className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none"
+              value={form.cliente || ""}
+              onChange={(e) => set("cliente", e.target.value)}
+              placeholder="Ex.: Marca XYZ"
+            />
+          </div>
 
-            <div className="col-span-2">
-              <label className="text-xs text-zinc-400">LINK</label>
-              <input
-                className="mt-1 w-full"
-                value={link}
-                onChange={(e) => setLink(e.target.value)}
-                placeholder="https://..."
-              />
-            </div>
+          <div className="md:col-span-2">
+            <label className="text-xs text-zinc-400">Link</label>
+            <input
+              className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none"
+              value={form.link}
+              onChange={(e) => set("link", e.target.value)}
+              placeholder="https://..."
+            />
+          </div>
 
-            <div className="col-span-2">
-              <label className="text-xs text-zinc-400">DESCRIÇÃO</label>
-              <textarea
-                className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-zinc-100 outline-none"
-                value={descricao}
-                onChange={(e) => setDescricao(e.target.value)}
-                placeholder="Como usar esse exemplo na venda, observações, contexto..."
-              />
-            </div>
+          <div className="md:col-span-2">
+            <label className="text-xs text-zinc-400">Descrição</label>
+            <textarea
+              className="mt-1 w-full min-h-[110px] rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none"
+              value={form.descricao || ""}
+              onChange={(e) => set("descricao", e.target.value)}
+              placeholder="Contexto, objetivo comercial, diferencial do formato, observações..."
+            />
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 p-4 border-t border-zinc-800">
+        <div className="p-4 border-t border-zinc-800 flex items-center justify-end gap-2">
           <button
-            className="px-4 py-2 rounded-xl border border-zinc-800 text-zinc-200 hover:bg-white/5"
-            onClick={close}
+            className="px-4 py-2 rounded-xl border border-zinc-800 bg-white/5 hover:bg-white/10 disabled:opacity-60"
+            onClick={onClose}
+            disabled={saving}
           >
             Cancelar
           </button>
+
           <button
-            className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold"
+            className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold disabled:opacity-60"
             onClick={submit}
+            disabled={saving}
           >
-            Salvar
+            {saving ? "Salvando..." : primaryLabel}
           </button>
         </div>
       </div>

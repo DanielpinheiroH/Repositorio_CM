@@ -1,62 +1,75 @@
 import type { ProjetoConteudo } from "../domain/models";
+import { apiDelete, apiGet, apiPost, apiPut } from "../services/api";
 
-const KEY = "REPOSITORIO_CM_CONTEUDOS_V1";
+// Contrato do backend (snake_case)
+type ConteudoApi = {
+  id: string;
+  nome_projeto: string;
+  canal: string;
+  tipo: string;
+  visualizacoes?: number | null;
+  segmento?: string | null;
+  data_publicacao?: string | null; // yyyy-mm-dd
+  cliente?: string | null;
+  link: string;
+  descricao?: string | null;
+  created_at: string;
+};
 
-function safeRead(): ProjetoConteudo[] {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as ProjetoConteudo[];
-  } catch {
-    return [];
-  }
+function fromApi(x: ConteudoApi): ProjetoConteudo {
+  return {
+    id: x.id,
+    nomeProjeto: x.nome_projeto,
+    canal: x.canal as any,
+    tipo: x.tipo as any,
+    visualizacoes: x.visualizacoes ?? null,
+    segmento: x.segmento ?? null,
+    dataPublicacao: x.data_publicacao ?? null,
+    cliente: x.cliente ?? null,
+    link: x.link,
+    descricao: x.descricao ?? null,
+    createdAt: x.created_at,
+  };
 }
 
-function safeWrite(items: ProjetoConteudo[]) {
-  localStorage.setItem(KEY, JSON.stringify(items));
+function toApi(payload: Omit<ProjetoConteudo, "id" | "createdAt">) {
+  return {
+    nome_projeto: payload.nomeProjeto,
+    canal: payload.canal,
+    tipo: payload.tipo,
+    visualizacoes: payload.visualizacoes ?? null,
+    segmento: payload.segmento ?? null,
+    data_publicacao: payload.dataPublicacao ?? null,
+    cliente: payload.cliente ?? null,
+    link: payload.link,
+    descricao: payload.descricao ?? null,
+  };
 }
 
 export const contentStore = {
-  list(): ProjetoConteudo[] {
-    return safeRead().sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+  async query(opts: { canal?: string; tipo?: string; q?: string }) {
+    const params = new URLSearchParams();
+    if (opts.canal) params.set("canal", opts.canal);
+    if (opts.tipo) params.set("tipo", opts.tipo);
+    if (opts.q) params.set("q", opts.q);
+    params.set("limit", "200");
+    params.set("offset", "0");
+
+    const data = await apiGet<ConteudoApi[]>(`/conteudos?${params.toString()}`);
+    return data.map(fromApi);
   },
 
-  create(payload: Omit<ProjetoConteudo, "id" | "createdAt">): ProjetoConteudo {
-    const items = safeRead();
-    const item: ProjetoConteudo = {
-      ...payload,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-    };
-    items.push(item);
-    safeWrite(items);
-    return item;
+  async create(payload: Omit<ProjetoConteudo, "id" | "createdAt">) {
+    const created = await apiPost<ConteudoApi>("/conteudos", toApi(payload));
+    return fromApi(created);
   },
 
-  query(opts: { canal?: string; tipo?: string; q?: string }): ProjetoConteudo[] {
-    const { canal, tipo, q } = opts;
-    const term = (q || "").trim().toLowerCase();
+  async update(id: string, payload: Omit<ProjetoConteudo, "id" | "createdAt">) {
+    const updated = await apiPut<ConteudoApi>(`/conteudos/${id}`, toApi(payload));
+    return fromApi(updated);
+  },
 
-    return this.list().filter((it) => {
-      if (canal && it.canal !== canal) return false;
-      if (tipo && it.tipo !== tipo) return false;
-
-      if (!term) return true;
-
-      const blob = [
-        it.nomeProjeto,
-        it.cliente,
-        it.segmento,
-        it.descricao,
-        it.link,
-        it.canal,
-        it.tipo,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      return blob.includes(term);
-    });
+  async remove(id: string) {
+    await apiDelete(`/conteudos/${id}`);
   },
 };
