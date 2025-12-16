@@ -20,6 +20,17 @@ Base.metadata.create_all(bind=engine)
 app.include_router(conteudos_router)
 
 
+@app.get("/")
+def root():
+    return {
+        "service": "Repositorio_CM API",
+        "version": "0.1.0",
+        "health": "/health",
+        "docs": "/docs",
+        "openapi": "/openapi.json",
+    }
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
