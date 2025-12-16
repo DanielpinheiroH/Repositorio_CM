@@ -5,12 +5,66 @@ import { NewProjectModal } from "../components/NewProjectModal";
 
 type FormValue = Omit<ProjetoConteudo, "id" | "createdAt">;
 
+type TipoOpt = { value: string; label: string };
+
+function tiposPorCanal(canal: string): TipoOpt[] {
+  if (!canal) {
+    // Todos os tipos (global)
+    return [
+      { value: "publieditorial", label: "Publieditorial" },
+      { value: "manchete", label: "Manchete" },
+      { value: "artigo-opiniao", label: "Artigo de opinião" },
+      // YouTube
+      { value: "talks", label: "TALKS" },
+      { value: "one-talk", label: "ONE TALK" },
+      { value: "big-talk", label: "BIG TALK" },
+      { value: "little-talk", label: "LITTLE TALK" },
+      { value: "shorts", label: "SHORTS" },
+      // Instagram
+      { value: "feed-reels", label: "Feed & Reels" },
+      { value: "stories", label: "Stories" },
+      // TikTok / Kwai / Facebook
+      { value: "feed", label: "Feed" },
+    ];
+  }
+
+  if (canal === "site") {
+    return [
+      { value: "publieditorial", label: "Publieditorial" },
+      { value: "manchete", label: "Manchete" },
+      { value: "artigo-opiniao", label: "Artigo de opinião" },
+      // se você adicionar depois: publicidade nativa
+      // { value: "publicidade-nativa", label: "Publicidade nativa" },
+    ];
+  }
+
+  if (canal === "youtube") {
+    return [
+      { value: "talks", label: "TALKS" },
+      { value: "one-talk", label: "ONE TALK" },
+      { value: "big-talk", label: "BIG TALK" },
+      { value: "little-talk", label: "LITTLE TALK" },
+      { value: "shorts", label: "SHORTS" },
+    ];
+  }
+
+  if (canal === "instagram") {
+    return [
+      { value: "feed-reels", label: "Feed & Reels" },
+      { value: "stories", label: "Stories" },
+    ];
+  }
+
+  // TikTok / Kwai / Facebook
+  return [{ value: "feed", label: "Feed" }];
+}
+
 export function AllContentsPage() {
   const [q, setQ] = useState("");
   const [canal, setCanal] = useState<string>("");
   const [tipo, setTipo] = useState<string>("");
 
-  // ✅ NOVO: filtro por segmento
+  // ✅ filtro por segmento
   const [segmento, setSegmento] = useState<string>("");
 
   const [rawItems, setRawItems] = useState<ProjetoConteudo[]>([]);
@@ -55,7 +109,21 @@ export function AllContentsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, canal, tipo]);
 
-  // ✅ NOVO: lista de segmentos existentes (para popular o select)
+  // ✅ Tipos dependentes do canal selecionado
+  const tiposDisponiveis = useMemo(() => {
+    return tiposPorCanal(canal);
+  }, [canal]);
+
+  // ✅ Se trocar canal e o tipo atual não existir mais, reseta tipo
+  useEffect(() => {
+    if (!tipo) return; // vazio sempre é válido
+    const allowed = tiposDisponiveis.map((t) => t.value);
+    if (!allowed.includes(tipo)) {
+      setTipo("");
+    }
+  }, [canal, tiposDisponiveis, tipo]);
+
+  // ✅ lista de segmentos existentes
   const segmentosDisponiveis = useMemo(() => {
     const s = new Set<string>();
     for (const it of rawItems) {
@@ -65,7 +133,7 @@ export function AllContentsPage() {
     return Array.from(s).sort((a, b) => a.localeCompare(b));
   }, [rawItems]);
 
-  // ✅ NOVO: aplica filtro por segmento sem mudar backend
+  // ✅ aplica filtro por segmento sem mudar backend
   const items = useMemo(() => {
     if (!segmento) return rawItems;
     return rawItems.filter((it) => (it.segmento || "").trim() === segmento);
@@ -130,7 +198,7 @@ export function AllContentsPage() {
         </button>
       </div>
 
-      {/* Filtros (mesmo layout, só adiciona Segmento) */}
+      {/* Filtros (mesmo layout, Tipo agora depende do Canal) */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
         <input
           className={baseInput}
@@ -139,7 +207,11 @@ export function AllContentsPage() {
           onChange={(e) => setQ(e.target.value)}
         />
 
-        <select className={baseSelect} value={canal} onChange={(e) => setCanal(e.target.value)}>
+        <select
+          className={baseSelect}
+          value={canal}
+          onChange={(e) => setCanal(e.target.value)}
+        >
           <option value="">Todos os canais</option>
           <option value="site">Site/Portal</option>
           <option value="youtube">YouTube</option>
@@ -149,19 +221,25 @@ export function AllContentsPage() {
           <option value="facebook">Facebook</option>
         </select>
 
-        <select className={baseSelect} value={tipo} onChange={(e) => setTipo(e.target.value)}>
-          <option value="">Todos os tipos</option>
-          <option value="publieditorial">Publieditorial</option>
-          <option value="manchete">Manchete</option>
-          <option value="artigo-opiniao">Artigo de opinião</option>
-          <option value="talks">TALKS</option>
-          <option value="shorts">SHORTS</option>
-          <option value="feed-reels">Feed & Reels</option>
-          <option value="stories">Stories</option>
-          <option value="feed">Feed</option>
+        {/* ✅ Tipo dependente do canal */}
+        <select
+          className={baseSelect}
+          value={tipo}
+          onChange={(e) => setTipo(e.target.value)}
+          disabled={loading}
+        >
+          <option value="">
+            {canal ? "Todos os tipos do canal" : "Todos os tipos"}
+          </option>
+
+          {tiposDisponiveis.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
         </select>
 
-        {/* ✅ NOVO: Segmento */}
+        {/* Segmento */}
         <select
           className={baseSelect}
           value={segmento}
@@ -177,7 +255,7 @@ export function AllContentsPage() {
         </select>
       </div>
 
-      {/* Ações rápidas (mantém simples) */}
+      {/* Ações rápidas */}
       <div className="flex items-center gap-2">
         <button
           className={baseBtn}
@@ -201,7 +279,7 @@ export function AllContentsPage() {
         </div>
       </div>
 
-      {/* Lista (mantendo simples, igual padrão antigo) */}
+      {/* Lista */}
       <div className="rounded-2xl border border-zinc-800 overflow-hidden">
         <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-zinc-900/40 text-xs text-zinc-400 border-b border-zinc-800">
           <div className="col-span-4">Projeto</div>
@@ -227,12 +305,7 @@ export function AllContentsPage() {
             <div className="col-span-2 text-sm text-zinc-400 truncate">{it.segmento || "—"}</div>
 
             <div className="col-span-2 flex items-center justify-end gap-2">
-              <a
-                className={baseBtn}
-                href={it.link}
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a className={baseBtn} href={it.link} target="_blank" rel="noreferrer">
                 Abrir
               </a>
 
