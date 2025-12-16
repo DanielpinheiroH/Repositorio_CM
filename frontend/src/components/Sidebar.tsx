@@ -17,43 +17,46 @@ export function Sidebar() {
     [],
   );
 
-  const baseItem =
-    "w-full px-3 py-2 rounded-xl text-sm transition border border-transparent";
-  const activeItem =
-    "bg-red-500/10 border-red-500/30 text-white";
-  const idleItem =
-    "text-zinc-300 hover:bg-white/5 hover:text-white";
-
   return (
-    <aside className="w-[280px] shrink-0 border-r border-zinc-800 bg-zinc-950">
-      <div className="p-4 border-b border-zinc-800">
-        <div className="text-white font-extrabold tracking-tight">Repositório</div>
-        <div className="text-zinc-400 text-xs mt-1">Comercial</div>
+    <aside className="rcm-sidebar w-[280px] shrink-0 h-screen sticky top-0 overflow-y-auto">
+      {/* Header do sidebar (mesmo conteúdo, visual novo) */}
+      <div className="p-4 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center">
+            <span className="text-white font-extrabold">R</span>
+          </div>
+
+          <div className="min-w-0">
+            <div className="text-[11px] tracking-[0.22em] uppercase text-white/60">
+              REPOSITÓRIO
+            </div>
+            <div className="text-white font-extrabold">Comercial</div>
+          </div>
+        </div>
       </div>
 
       <nav className="p-3">
+        {/* Todos os Conteúdos (mesma rota) */}
         <NavLink
           to={NAV.todos.path}
-          className={({ isActive }) =>
-            `${baseItem} ${isActive ? activeItem : idleItem}`
-          }
+          className={({ isActive }) => (isActive ? "rcm-nav-item-active" : "rcm-nav-item")}
         >
-          Todos os Conteúdos
+          <span>Todos os Conteúdos</span>
+          <span className="rcm-pill-dot" />
         </NavLink>
 
-        <div className="h-3" />
+        <div className="h-4" />
 
         {groups.map((g) => (
-          <div key={g.key} className="mb-2">
+          <div key={g.key} className="mb-3">
+            {/* Botão do grupo (mesma lógica open/close) */}
             <button
               type="button"
               onClick={() => setOpenGroup(openGroup === g.key ? "" : g.key)}
-              className={`${baseItem} ${openGroup === g.key ? "bg-white/5 text-white border-zinc-800" : idleItem} flex items-center justify-between`}
+              className={openGroup === g.key ? "rcm-nav-item-active" : "rcm-nav-item"}
             >
-              <span>{g.data.label}</span>
-              <span className="text-zinc-400">
-                {openGroup === g.key ? "▾" : "▸"}
-              </span>
+              <span className="font-semibold">{g.data.label}</span>
+              <span className="rcm-chevron">{openGroup === g.key ? "▾" : "▸"}</span>
             </button>
 
             {openGroup === g.key ? (
@@ -63,14 +66,11 @@ export function Sidebar() {
                     key={`${g.key}-${it.tipo}`}
                     to={buildPath(g.key as any, it.tipo)}
                     className={({ isActive }) =>
-                      `px-3 py-2 rounded-xl text-sm border transition ${
-                        isActive
-                          ? "bg-red-500/10 border-red-500/30 text-white"
-                          : "border-transparent text-zinc-400 hover:text-white hover:bg-white/5"
-                      }`
+                      isActive ? "rcm-nav-item-active" : "rcm-nav-item"
                     }
                   >
-                    {it.label}
+                    <span className="truncate">{it.label}</span>
+                    <span className="rcm-pill-dot" />
                   </NavLink>
                 ))}
               </div>

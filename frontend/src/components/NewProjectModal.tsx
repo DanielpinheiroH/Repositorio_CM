@@ -29,11 +29,20 @@ function tiposPorCanal(canal: string) {
       { value: "publieditorial", label: "Publieditorial" },
       { value: "manchete", label: "Manchete" },
       { value: "artigo-opiniao", label: "Artigo de opinião" },
+
+      // ✅ NOVO
+      { value: "publicidade-nativa", label: "Publicidade nativa" },
     ];
   }
   if (canal === "youtube") {
     return [
       { value: "talks", label: "TALKS" },
+
+      // ✅ NOVOS
+      { value: "one-talk", label: "ONE TALK" },
+      { value: "big-talk", label: "BIG TALK" },
+      { value: "little-talk", label: "LITTLE TALK" },
+
       { value: "shorts", label: "SHORTS" },
     ];
   }
@@ -96,7 +105,10 @@ export function NewProjectModal({
     setForm(emptyForm);
   }, [open, mode, initialValue]);
 
-  const tipos = useMemo(() => tiposPorCanal(String(form.canal || "site")), [form.canal]);
+  const tipos = useMemo(
+    () => tiposPorCanal(String(form.canal || "site")),
+    [form.canal],
+  );
 
   // Se trocar canal e o tipo não existir mais, ajusta pro primeiro disponível
   useEffect(() => {
@@ -144,7 +156,9 @@ export function NewProjectModal({
       descricao: form.descricao?.trim() || "",
       dataPublicacao: form.dataPublicacao || "",
       visualizacoes:
-        form.visualizacoes === null || form.visualizacoes === undefined || Number.isNaN(Number(form.visualizacoes))
+        form.visualizacoes === null ||
+        form.visualizacoes === undefined ||
+        Number.isNaN(Number(form.visualizacoes))
           ? null
           : Number(form.visualizacoes),
     });
@@ -152,7 +166,10 @@ export function NewProjectModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60" onClick={saving ? undefined : onClose} />
+      <div
+        className="absolute inset-0 bg-black/60"
+        onClick={saving ? undefined : onClose}
+      />
 
       <div className="relative w-full max-w-3xl rounded-2xl border border-zinc-800 bg-zinc-950 shadow-xl">
         <div className="p-4 border-b border-zinc-800 flex items-center justify-between gap-3">
@@ -221,7 +238,12 @@ export function NewProjectModal({
               type="number"
               className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none"
               value={form.visualizacoes ?? ""}
-              onChange={(e) => set("visualizacoes", e.target.value === "" ? null : Number(e.target.value))}
+              onChange={(e) =>
+                set(
+                  "visualizacoes",
+                  e.target.value === "" ? null : Number(e.target.value),
+                )
+              }
               placeholder="Ex.: 120000"
             />
           </div>

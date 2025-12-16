@@ -10,7 +10,10 @@ export function AllContentsPage() {
   const [canal, setCanal] = useState<string>("");
   const [tipo, setTipo] = useState<string>("");
 
-  const [items, setItems] = useState<ProjetoConteudo[]>([]);
+  // ✅ NOVO: filtro por segmento
+  const [segmento, setSegmento] = useState<string>("");
+
+  const [rawItems, setRawItems] = useState<ProjetoConteudo[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -19,7 +22,15 @@ export function AllContentsPage() {
   const [editing, setEditing] = useState<ProjetoConteudo | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const count = useMemo(() => items.length, [items]);
+  // ====== UI styles (mantendo padrão "antigo") ======
+  const baseInput =
+    "w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none";
+  const baseSelect =
+    "w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none";
+  const baseBtn =
+    "px-3 py-2 rounded-xl border border-zinc-800 bg-white/5 hover:bg-white/10 text-white";
+  const primaryBtn =
+    "px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold";
 
   async function fetchData() {
     setLoading(true);
@@ -30,10 +41,10 @@ export function AllContentsPage() {
         tipo: tipo || undefined,
         q: q || undefined,
       });
-      setItems(data);
+      setRawItems(data);
     } catch (e: any) {
       setErr(String(e?.message || e));
-      setItems([]);
+      setRawItems([]);
     } finally {
       setLoading(false);
     }
@@ -43,6 +54,22 @@ export function AllContentsPage() {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, canal, tipo]);
+
+  // ✅ NOVO: lista de segmentos existentes (para popular o select)
+  const segmentosDisponiveis = useMemo(() => {
+    const s = new Set<string>();
+    for (const it of rawItems) {
+      const seg = (it.segmento || "").trim();
+      if (seg) s.add(seg);
+    }
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [rawItems]);
+
+  // ✅ NOVO: aplica filtro por segmento sem mudar backend
+  const items = useMemo(() => {
+    if (!segmento) return rawItems;
+    return rawItems.filter((it) => (it.segmento || "").trim() === segmento);
+  }, [rawItems, segmento]);
 
   function openCreate() {
     setModalMode("create");
@@ -68,7 +95,7 @@ export function AllContentsPage() {
 
       setModalOpen(false);
       setEditing(null);
-      await fetchData(); // refresh automático
+      await fetchData();
     } catch (e: any) {
       alert(`Erro ao salvar: ${String(e?.message || e)}`);
     } finally {
@@ -82,159 +109,153 @@ export function AllContentsPage() {
 
     try {
       await contentStore.remove(item.id);
-      await fetchData(); // refresh automático
+      await fetchData();
     } catch (e: any) {
       alert(`Erro ao excluir: ${String(e?.message || e)}`);
     }
   }
 
   return (
-    <div className="space-y-4">
-      {/* HEADER DA TELA */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-          <div>
-            <div className="text-xl font-extrabold text-white">Todos os Conteúdos</div>
-            <div className="text-xs text-zinc-400 mt-1">
-              Repositório geral para consulta rápida de exemplos comerciais por canal e formato.
-            </div>
-
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-950 px-3 py-1">
-              <span className="text-xs text-zinc-400">Total:</span>
-              <span className="text-xs font-semibold text-white">{loading ? "—" : count}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              className="px-4 py-2 rounded-xl border border-zinc-800 bg-white/5 hover:bg-white/10 text-white font-semibold"
-              onClick={() => {
-                setQ("");
-                setCanal("");
-                setTipo("");
-              }}
-              disabled={loading}
-              title="Limpar filtros"
-            >
-              Limpar
-            </button>
-
-            <button
-              className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold disabled:opacity-60"
-              onClick={openCreate}
-              disabled={saving}
-            >
-              Novo Projeto
-            </button>
+    <div className="space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-lg font-extrabold text-white">Todos os Conteúdos</div>
+          <div className="text-xs text-zinc-400 mt-1">
+            Busca e filtros globais em todos os canais
           </div>
         </div>
 
-        {/* FILTROS */}
-        <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3">
-          <input
-            className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 outline-none"
-            placeholder="Buscar em tudo (nome, cliente, segmento, descrição, link)..."
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
+        <button className={primaryBtn} onClick={openCreate} disabled={saving}>
+          Novo Projeto
+        </button>
+      </div>
 
-          <select
-            className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 outline-none"
-            value={canal}
-            onChange={(e) => setCanal(e.target.value)}
-          >
-            <option value="">Todos os canais</option>
-            <option value="site">Site/Portal</option>
-            <option value="youtube">YouTube</option>
-            <option value="instagram">Instagram</option>
-            <option value="tiktok">TikTok</option>
-            <option value="kwai">Kwai</option>
-            <option value="facebook">Facebook</option>
-          </select>
+      {/* Filtros (mesmo layout, só adiciona Segmento) */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+        <input
+          className={baseInput}
+          placeholder="Buscar em tudo (nome, cliente, segmento, descrição...)"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
 
-          <select
-            className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 outline-none"
-            value={tipo}
-            onChange={(e) => setTipo(e.target.value)}
-          >
-            <option value="">Todos os tipos</option>
-            <option value="publieditorial">Publieditorial</option>
-            <option value="manchete">Manchete</option>
-            <option value="artigo-opiniao">Artigo de opinião</option>
-            <option value="talks">TALKS</option>
-            <option value="shorts">SHORTS</option>
-            <option value="feed-reels">Feed & Reels</option>
-            <option value="stories">Stories</option>
-            <option value="feed">Feed</option>
-          </select>
+        <select className={baseSelect} value={canal} onChange={(e) => setCanal(e.target.value)}>
+          <option value="">Todos os canais</option>
+          <option value="site">Site/Portal</option>
+          <option value="youtube">YouTube</option>
+          <option value="instagram">Instagram</option>
+          <option value="tiktok">TikTok</option>
+          <option value="kwai">Kwai</option>
+          <option value="facebook">Facebook</option>
+        </select>
+
+        <select className={baseSelect} value={tipo} onChange={(e) => setTipo(e.target.value)}>
+          <option value="">Todos os tipos</option>
+          <option value="publieditorial">Publieditorial</option>
+          <option value="manchete">Manchete</option>
+          <option value="artigo-opiniao">Artigo de opinião</option>
+          <option value="talks">TALKS</option>
+          <option value="shorts">SHORTS</option>
+          <option value="feed-reels">Feed & Reels</option>
+          <option value="stories">Stories</option>
+          <option value="feed">Feed</option>
+        </select>
+
+        {/* ✅ NOVO: Segmento */}
+        <select
+          className={baseSelect}
+          value={segmento}
+          onChange={(e) => setSegmento(e.target.value)}
+          disabled={loading || segmentosDisponiveis.length === 0}
+        >
+          <option value="">Todos os segmentos</option>
+          {segmentosDisponiveis.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Ações rápidas (mantém simples) */}
+      <div className="flex items-center gap-2">
+        <button
+          className={baseBtn}
+          onClick={() => {
+            setQ("");
+            setCanal("");
+            setTipo("");
+            setSegmento("");
+          }}
+          disabled={loading}
+        >
+          Limpar filtros
+        </button>
+
+        <button className={baseBtn} onClick={fetchData} disabled={loading}>
+          Atualizar
+        </button>
+
+        <div className="text-xs text-zinc-400 ml-auto">
+          {loading ? "Carregando..." : err ? `Erro: ${err}` : `${items.length} item(ns)`}
         </div>
       </div>
 
-      {/* ESTADOS */}
-      {loading ? (
-        <div className="text-zinc-400">Carregando...</div>
-      ) : err ? (
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-red-200">
-          Erro ao buscar conteúdos: {err}
+      {/* Lista (mantendo simples, igual padrão antigo) */}
+      <div className="rounded-2xl border border-zinc-800 overflow-hidden">
+        <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-zinc-900/40 text-xs text-zinc-400 border-b border-zinc-800">
+          <div className="col-span-4">Projeto</div>
+          <div className="col-span-2">Canal/Tipo</div>
+          <div className="col-span-2">Cliente</div>
+          <div className="col-span-2">Segmento</div>
+          <div className="col-span-2 text-right">Ações</div>
         </div>
-      ) : (
-        <div className="rounded-2xl border border-zinc-800 overflow-hidden">
-          <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-zinc-900/40 text-xs text-zinc-400 border-b border-zinc-800">
-            <div className="col-span-4">Projeto</div>
-            <div className="col-span-2">Canal/Tipo</div>
-            <div className="col-span-2">Cliente</div>
-            <div className="col-span-2">Views</div>
-            <div className="col-span-2 text-right">Ações</div>
+
+        {items.map((it) => (
+          <div
+            key={it.id}
+            className="grid grid-cols-12 gap-3 px-4 py-3 border-b border-zinc-800/60 bg-zinc-950 items-center"
+          >
+            <div className="col-span-4 font-semibold text-white truncate">{it.nomeProjeto}</div>
+
+            <div className="col-span-2 text-sm text-zinc-300 truncate">
+              {it.canal} / {it.tipo}
+            </div>
+
+            <div className="col-span-2 text-sm text-zinc-300 truncate">{it.cliente || "—"}</div>
+
+            <div className="col-span-2 text-sm text-zinc-400 truncate">{it.segmento || "—"}</div>
+
+            <div className="col-span-2 flex items-center justify-end gap-2">
+              <a
+                className={baseBtn}
+                href={it.link}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Abrir
+              </a>
+
+              <button className={baseBtn} onClick={() => openEdit(it)}>
+                Editar
+              </button>
+
+              <button
+                className="px-3 py-2 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/15 text-red-200"
+                onClick={() => handleDelete(it)}
+              >
+                Excluir
+              </button>
+            </div>
           </div>
+        ))}
 
-          {items.map((it) => (
-            <div
-              key={it.id}
-              className="grid grid-cols-12 gap-3 px-4 py-3 border-b border-zinc-800/60 bg-zinc-950 items-center"
-            >
-              <div className="col-span-4 font-semibold text-white truncate">{it.nomeProjeto}</div>
-              <div className="col-span-2 text-sm text-zinc-300 truncate">
-                {it.canal} / {it.tipo}
-              </div>
-              <div className="col-span-2 text-sm text-zinc-300 truncate">{it.cliente || "—"}</div>
-              <div className="col-span-2 text-sm text-zinc-300">
-                {typeof it.visualizacoes === "number" ? it.visualizacoes : "—"}
-              </div>
-
-              <div className="col-span-2 flex items-center justify-end gap-2">
-                <a
-                  className="px-3 py-2 rounded-xl border border-zinc-800 bg-white/5 hover:bg-white/10 text-sm"
-                  href={it.link}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Abrir
-                </a>
-
-                <button
-                  className="px-3 py-2 rounded-xl border border-zinc-800 bg-white/5 hover:bg-white/10 text-sm"
-                  onClick={() => openEdit(it)}
-                >
-                  Editar
-                </button>
-
-                <button
-                  className="px-3 py-2 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/15 text-sm text-red-200"
-                  onClick={() => handleDelete(it)}
-                >
-                  Excluir
-                </button>
-              </div>
-            </div>
-          ))}
-
-          {items.length === 0 ? (
-            <div className="p-6 text-zinc-400 bg-zinc-950">
-              Nenhum conteúdo encontrado com esses filtros.
-            </div>
-          ) : null}
-        </div>
-      )}
+        {items.length === 0 ? (
+          <div className="p-6 text-zinc-400 bg-zinc-950">
+            Nenhum conteúdo encontrado com esses filtros.
+          </div>
+        ) : null}
+      </div>
 
       <NewProjectModal
         open={modalOpen}
@@ -265,4 +286,3 @@ export function AllContentsPage() {
     </div>
   );
 }
-...

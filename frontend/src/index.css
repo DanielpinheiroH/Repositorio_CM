@@ -2,9 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base global do app */
+/* ===== Tema (vinho/bordô) ===== */
 :root {
   color-scheme: dark;
+
+  --rcm-bg: #0a0a0c;
+  --rcm-wine-950: #120205;
+  --rcm-wine-900: #1b0308;
+  --rcm-wine-850: #23040a;
+  --rcm-wine-800: #2a050c;
+
+  --rcm-border: rgba(255, 255, 255, 0.08);
+  --rcm-muted: rgba(255, 255, 255, 0.62);
+  --rcm-muted2: rgba(255, 255, 255, 0.45);
+
+  --rcm-red: #d51620;
+  --rcm-red2: #ff2b35;
+  --rcm-red-soft: rgba(213, 22, 32, 0.22);
+  --rcm-red-soft2: rgba(213, 22, 32, 0.12);
 }
 
 html,
@@ -15,12 +30,93 @@ body,
 
 body {
   margin: 0;
-  background: #0b0b0f; /* dark */
-  color: #e9e9ef;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: radial-gradient(900px 600px at 20% 0%, rgba(213, 22, 32, 0.10), transparent 60%),
+    radial-gradient(900px 600px at 80% 30%, rgba(213, 22, 32, 0.08), transparent 60%),
+    var(--rcm-bg);
+  color: #e7e7ea;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+    "Apple Color Emoji", "Segoe UI Emoji";
 }
 
-/* Helpers (opcional) */
-* {
-  box-sizing: border-box;
+/* seleção */
+::selection {
+  background: rgba(213, 22, 32, 0.35);
+  color: #fff;
+}
+
+/* scrollbar */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+@layer components {
+  /* Sidebar background no estilo do print */
+  .rcm-sidebar {
+    background:
+      radial-gradient(700px 500px at 50% 0%, rgba(213, 22, 32, 0.10), transparent 55%),
+      linear-gradient(180deg, var(--rcm-wine-900) 0%, var(--rcm-wine-950) 55%, #07070a 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .rcm-topbar {
+    background: linear-gradient(180deg, #2a050c 0%, #1b0308 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .rcm-section-label {
+    @apply text-[11px] tracking-[0.18em] uppercase;
+    color: rgba(255, 255, 255, 0.50);
+  }
+
+  .rcm-nav-item {
+    @apply w-full flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm;
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  .rcm-nav-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .rcm-nav-item-active {
+    @apply w-full flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(213, 22, 32, 0.55);
+    box-shadow: 0 0 0 1px rgba(213, 22, 32, 0.10) inset;
+    color: #fff;
+  }
+
+  .rcm-pill-dot {
+    @apply h-2 w-2 rounded-full;
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  .rcm-chevron {
+    @apply h-4 w-4 rounded-sm flex items-center justify-center text-[10px];
+    background: rgba(255, 255, 255, 0.10);
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .rcm-btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold;
+    background: linear-gradient(180deg, var(--rcm-red2), var(--rcm-red));
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 10px 18px rgba(213, 22, 32, 0.18);
+    color: #fff;
+  }
+
+  .rcm-btn-primary:hover {
+    filter: brightness(1.05);
+  }
 }

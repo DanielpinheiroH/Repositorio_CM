@@ -10,7 +10,11 @@ export type TipoKey =
   | "publieditorial"
   | "manchete"
   | "artigo-opiniao"
+  | "publicidade-nativa"
   | "talks"
+  | "one-talk"      // ✅ NOVO
+  | "big-talk"      // ✅ NOVO
+  | "little-talk"   // ✅ NOVO
   | "shorts"
   | "feed-reels"
   | "stories"
@@ -25,13 +29,20 @@ export const NAV = {
       { label: "Publieditorial", tipo: "publieditorial" as const },
       { label: "Manchete", tipo: "manchete" as const },
       { label: "Artigo de opinião", tipo: "artigo-opiniao" as const },
+      { label: "Publicidade nativa", tipo: "publicidade-nativa" as const },
     ],
   },
 
   youtube: {
     label: "YouTube",
     items: [
-      { label: "TALKS", tipo: "talks" as const },
+      { label: "TALKS (Geral)", tipo: "talks" as const },
+
+      // ✅ NOVOS tipos específicos
+      { label: "ONE TALK", tipo: "one-talk" as const },
+      { label: "BIG TALK", tipo: "big-talk" as const },
+      { label: "LITTLE TALK", tipo: "little-talk" as const },
+
       { label: "SHORTS", tipo: "shorts" as const },
     ],
   },

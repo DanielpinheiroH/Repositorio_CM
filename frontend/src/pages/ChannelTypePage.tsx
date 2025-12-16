@@ -7,9 +7,41 @@ import { NewProjectModal } from "../components/NewProjectModal";
 
 type FormValue = Omit<ProjetoConteudo, "id" | "createdAt">;
 
+function compactUrl(url: string) {
+  try {
+    const u = new URL(url);
+    const path = u.pathname.length > 28 ? u.pathname.slice(0, 28) + "…" : u.pathname;
+    return `${u.host}${path}${u.search ? "?" : ""}`;
+  } catch {
+    return url.replace(/^https?:\/\//, "").slice(0, 42);
+  }
+}
+
+function formatDateBR(value?: string | null) {
+  const v = (value || "").trim();
+  if (!v) return "";
+  // esperado: YYYY-MM-DD
+  const m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  // fallback: tenta Date()
+  const d = new Date(v);
+  if (!Number.isNaN(d.getTime())) {
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  }
+  return v;
+}
+
 export function ChannelTypePage() {
   const { canal, tipo } = useParams();
+
   const [q, setQ] = useState("");
+
+  // filtros
+  const [segmento, setSegmento] = useState<string>("");
+  const [cliente, setCliente] = useState<string>("");
 
   const [items, setItems] = useState<ProjetoConteudo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +74,32 @@ export function ChannelTypePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canal, tipo, q]);
 
+  const segmentosDisponiveis = useMemo(() => {
+    const s = new Set<string>();
+    for (const it of items) {
+      const v = (it.segmento || "").trim();
+      if (v) s.add(v);
+    }
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
+  const clientesDisponiveis = useMemo(() => {
+    const s = new Set<string>();
+    for (const it of items) {
+      const v = (it.cliente || "").trim();
+      if (v) s.add(v);
+    }
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
+  const filteredItems = useMemo(() => {
+    return items.filter((it) => {
+      const segOk = !segmento || (it.segmento || "").trim() === segmento;
+      const cliOk = !cliente || (it.cliente || "").trim() === cliente;
+      return segOk && cliOk;
+    });
+  }, [items, segmento, cliente]);
+
   function openEdit(item: ProjetoConteudo) {
     setEditing(item);
     setModalOpen(true);
@@ -55,7 +113,7 @@ export function ChannelTypePage() {
       await contentStore.update(editing.id, payload);
       setModalOpen(false);
       setEditing(null);
-      await fetchData(); // refresh automático
+      await fetchData();
     } catch (e: any) {
       alert(`Erro ao salvar: ${String(e?.message || e)}`);
     } finally {
@@ -69,7 +127,7 @@ export function ChannelTypePage() {
 
     try {
       await contentStore.remove(item.id);
-      await fetchData(); // refresh automático
+      await fetchData();
     } catch (e: any) {
       alert(`Erro ao excluir: ${String(e?.message || e)}`);
     }
@@ -77,6 +135,7 @@ export function ChannelTypePage() {
 
   return (
     <div className="space-y-3">
+      {/* header */}
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="text-lg font-extrabold text-white">{title}</div>
@@ -86,13 +145,47 @@ export function ChannelTypePage() {
         </div>
 
         <input
-          className="w-full max-w-xl rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none"
+          className="w-full max-w-xl rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none focus:border-red-500/40"
           placeholder="Buscar por nome, cliente, segmento, descrição..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
       </div>
 
+      {/* filtros */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <select
+          className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none text-zinc-200"
+          value={segmento}
+          onChange={(e) => setSegmento(e.target.value)}
+          disabled={loading}
+          title="Filtrar por segmento"
+        >
+          <option value="">Todos os segmentos</option>
+          {segmentosDisponiveis.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none text-zinc-200"
+          value={cliente}
+          onChange={(e) => setCliente(e.target.value)}
+          disabled={loading}
+          title="Filtrar por cliente"
+        >
+          <option value="">Todos os clientes</option>
+          {clientesDisponiveis.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* status */}
       {loading ? (
         <div className="text-zinc-400">Carregando...</div>
       ) : err ? (
@@ -101,54 +194,107 @@ export function ChannelTypePage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-          {items.map((it) => (
-            <div
-              key={it.id}
-              className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-3"
-            >
-              <div className="font-extrabold text-white">{it.nomeProjeto}</div>
+          {filteredItems.map((it) => {
+            const dataBR = formatDateBR(it.dataPublicacao);
+            return (
+              <div
+                key={it.id}
+                className="
+                  rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4
+                  transition hover:border-red-500/25 hover:bg-zinc-900/55 hover:shadow-lg
+                "
+              >
+                {/* topo do card */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-extrabold text-white text-lg truncate">
+                      {it.nomeProjeto}
+                    </div>
 
-              <div className="text-xs text-zinc-400 flex flex-wrap gap-2">
-                <span>Cliente: {it.cliente || "—"}</span>
-                {it.dataPublicacao ? <span>• Publicação: {it.dataPublicacao}</span> : null}
-                {typeof it.visualizacoes === "number" ? (
-                  <span>• Views: {it.visualizacoes}</span>
-                ) : null}
-                {it.segmento ? <span>• Segmento: {it.segmento}</span> : null}
+                    {/* badges */}
+                    <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-white/5 px-2 py-1 text-zinc-200">
+                        {canalLabel(String(it.canal || ""))}
+                      </span>
+
+                      <span className="inline-flex items-center gap-2 rounded-full border border-red-500/25 bg-red-500/10 px-2 py-1 text-red-100">
+                        {tipoLabel(String(it.canal || ""), String(it.tipo || ""))}
+                      </span>
+
+                      {it.segmento ? (
+                        <span className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-white/5 px-2 py-1 text-zinc-200">
+                          {it.segmento}
+                        </span>
+                      ) : null}
+
+                      {dataBR ? (
+                        <span className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-white/5 px-2 py-1 text-zinc-300">
+                          {dataBR}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 text-right">
+                    <div className="text-[10px] text-zinc-400">VIEWS</div>
+                    <div className="mt-1 rounded-xl border border-red-500/25 bg-red-500/10 px-2 py-1 text-sm font-bold text-red-100">
+                      {typeof it.visualizacoes === "number" ? it.visualizacoes : "—"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* cliente */}
+                <div className="mt-3 text-xs text-zinc-400">
+                  <span className="text-zinc-500">Cliente:</span>{" "}
+                  <span className="text-zinc-200">{it.cliente || "—"}</span>
+                </div>
+
+                {/* descrição */}
+                {it.descricao ? (
+                  <div className="mt-3 text-sm text-zinc-200/90 leading-relaxed line-clamp-3">
+                    {it.descricao}
+                  </div>
+                ) : (
+                  <div className="mt-3 text-sm text-zinc-500 italic">Sem descrição.</div>
+                )}
+
+                {/* link */}
+                <div className="mt-3 text-[11px] text-zinc-500 truncate">
+                  {it.link ? compactUrl(it.link) : ""}
+                </div>
+
+                {/* ações */}
+                <div className="mt-4 flex items-center gap-2">
+                  <a
+                    className="inline-flex items-center justify-center px-4 py-2 rounded-xl border border-red-600 bg-red-500/10 hover:bg-red-500/20 text-sm text-white transition-all"
+                    href={it.link}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Abrir Link
+                  </a>
+
+                  <button
+                    className="inline-flex items-center justify-center px-4 py-2 rounded-xl border border-zinc-800 bg-white/5 hover:bg-white/10 text-sm text-white transition-all"
+                    onClick={() => openEdit(it)}
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    className="ml-auto inline-flex items-center justify-center px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/15 text-sm text-red-200 transition-all"
+                    onClick={() => handleDelete(it)}
+                  >
+                    Excluir
+                  </button>
+                </div>
               </div>
+            );
+          })}
 
-              {it.descricao ? <div className="text-sm text-zinc-200/90">{it.descricao}</div> : null}
-
-              <div className="pt-2 flex items-center gap-2">
-                <a
-                  className="inline-flex items-center justify-center px-3 py-2 rounded-xl border border-zinc-800 bg-white/5 hover:bg-white/10 text-sm"
-                  href={it.link}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Abrir Link
-                </a>
-
-                <button
-                  className="inline-flex items-center justify-center px-3 py-2 rounded-xl border border-zinc-800 bg-white/5 hover:bg-white/10 text-sm"
-                  onClick={() => openEdit(it)}
-                >
-                  Editar
-                </button>
-
-                <button
-                  className="inline-flex items-center justify-center px-3 py-2 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/15 text-sm text-red-200"
-                  onClick={() => handleDelete(it)}
-                >
-                  Excluir
-                </button>
-              </div>
-            </div>
-          ))}
-
-          {items.length === 0 ? (
+          {filteredItems.length === 0 ? (
             <div className="col-span-full rounded-2xl border border-dashed border-zinc-800 p-6 text-zinc-400">
-              Nenhum conteúdo encontrado aqui ainda. Clique em “Novo Projeto” para criar o primeiro.
+              Nenhum conteúdo encontrado com os filtros selecionados.
             </div>
           ) : null}
         </div>
