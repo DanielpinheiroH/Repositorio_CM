@@ -135,8 +135,8 @@ export function ChannelTypePage() {
 
   return (
     <div className="space-y-3">
-      {/* header */}
-      <div className="flex items-center justify-between gap-3">
+      {/* topo responsivo */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div>
           <div className="text-lg font-extrabold text-white">{title}</div>
           <div className="text-xs text-zinc-400 mt-1">
@@ -145,15 +145,15 @@ export function ChannelTypePage() {
         </div>
 
         <input
-          className="w-full max-w-xl rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none focus:border-red-500/40"
+          className="w-full lg:max-w-xl rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none focus:border-red-500/40"
           placeholder="Buscar por nome, cliente, segmento, descrição..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
       </div>
 
-      {/* filtros */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {/* filtros responsivos */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <select
           className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 outline-none text-zinc-200"
           value={segmento}
@@ -196,6 +196,7 @@ export function ChannelTypePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
           {filteredItems.map((it) => {
             const dataBR = formatDateBR(it.dataPublicacao);
+
             return (
               <div
                 key={it.id}
@@ -204,14 +205,13 @@ export function ChannelTypePage() {
                   transition hover:border-red-500/25 hover:bg-zinc-900/55 hover:shadow-lg
                 "
               >
-                {/* topo do card */}
-                <div className="flex items-start justify-between gap-3">
+                {/* topo do card responsivo */}
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-extrabold text-white text-lg truncate">
                       {it.nomeProjeto}
                     </div>
 
-                    {/* badges */}
                     <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
                       <span className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-white/5 px-2 py-1 text-zinc-200">
                         {canalLabel(String(it.canal || ""))}
@@ -235,9 +235,10 @@ export function ChannelTypePage() {
                     </div>
                   </div>
 
-                  <div className="shrink-0 text-right">
+                  {/* views (no mobile fica abaixo automaticamente) */}
+                  <div className="shrink-0 sm:text-right">
                     <div className="text-[10px] text-zinc-400">VIEWS</div>
-                    <div className="mt-1 rounded-xl border border-red-500/25 bg-red-500/10 px-2 py-1 text-sm font-bold text-red-100">
+                    <div className="mt-1 w-fit sm:ml-auto rounded-xl border border-red-500/25 bg-red-500/10 px-2 py-1 text-sm font-bold text-red-100">
                       {typeof it.visualizacoes === "number" ? it.visualizacoes : "—"}
                     </div>
                   </div>
@@ -258,13 +259,13 @@ export function ChannelTypePage() {
                   <div className="mt-3 text-sm text-zinc-500 italic">Sem descrição.</div>
                 )}
 
-                {/* link */}
+                {/* link compacto */}
                 <div className="mt-3 text-[11px] text-zinc-500 truncate">
                   {it.link ? compactUrl(it.link) : ""}
                 </div>
 
-                {/* ações */}
-                <div className="mt-4 flex items-center gap-2">
+                {/* ações responsivas */}
+                <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-2">
                   <a
                     className="inline-flex items-center justify-center px-4 py-2 rounded-xl border border-red-600 bg-red-500/10 hover:bg-red-500/20 text-sm text-white transition-all"
                     href={it.link}
@@ -282,7 +283,12 @@ export function ChannelTypePage() {
                   </button>
 
                   <button
-                    className="ml-auto inline-flex items-center justify-center px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/15 text-sm text-red-200 transition-all"
+                    className="
+                      sm:ml-auto
+                      inline-flex items-center justify-center px-4 py-2 rounded-xl
+                      border border-red-500/30 bg-red-500/10 hover:bg-red-500/15
+                      text-sm text-red-200 transition-all
+                    "
                     onClick={() => handleDelete(it)}
                   >
                     Excluir
