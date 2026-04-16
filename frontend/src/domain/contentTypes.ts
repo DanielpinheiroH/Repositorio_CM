@@ -7,14 +7,12 @@ export type CanalKey =
   | "facebook";
 
 export type TipoKey =
-  | "publieditorial"
-  | "manchete"
+  | "conteudo-de-marca"
   | "artigo-opiniao"
-  | "publicidade-nativa"
   | "talks"
-  | "one-talk"      // ✅ NOVO
-  | "big-talk"      // ✅ NOVO
-  | "little-talk"   // ✅ NOVO
+  | "one-talk"
+  | "big-talk"
+  | "little-talk"
   | "shorts"
   | "feed-reels"
   | "stories"
@@ -26,10 +24,8 @@ export const NAV = {
   site: {
     label: "Site/Portal",
     items: [
-      { label: "Publieditorial", tipo: "publieditorial" as const },
-      { label: "Manchete", tipo: "manchete" as const },
+      { label: "Conteúdo de marca", tipo: "conteudo-de-marca" as const },
       { label: "Artigo de opinião", tipo: "artigo-opiniao" as const },
-      { label: "Publicidade nativa", tipo: "publicidade-nativa" as const },
     ],
   },
 
@@ -37,12 +33,9 @@ export const NAV = {
     label: "YouTube",
     items: [
       { label: "TALKS (Geral)", tipo: "talks" as const },
-
-      // ✅ NOVOS tipos específicos
       { label: "ONE TALK", tipo: "one-talk" as const },
       { label: "BIG TALK", tipo: "big-talk" as const },
       { label: "LITTLE TALK", tipo: "little-talk" as const },
-
       { label: "SHORTS", tipo: "shorts" as const },
     ],
   },

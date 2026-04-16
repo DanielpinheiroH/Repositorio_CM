@@ -5,6 +5,9 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./repositorio_cm.db"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
+    ga_credentials_json: str = ""
+    ga4_property_id: str = ""
+
     class Config:
         env_file = ".env"
         extra = "ignore"

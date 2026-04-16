@@ -2,7 +2,12 @@ import { useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { NAV, buildPath } from "../domain/contentTypes";
 
-export function Sidebar() {
+type Props = {
+  mobileOpen: boolean;
+  onCloseMobile: () => void;
+};
+
+export function Sidebar({ mobileOpen, onCloseMobile }: Props) {
   const [openGroup, setOpenGroup] = useState<string>("site");
 
   const groups = useMemo(
@@ -18,66 +23,112 @@ export function Sidebar() {
   );
 
   return (
-    <aside className="rcm-sidebar w-[280px] shrink-0 h-screen sticky top-0 overflow-y-auto">
-      {/* Header do sidebar (mesmo conteúdo, visual novo) */}
-      <div className="p-4 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center">
-            <span className="text-white font-extrabold">R</span>
-          </div>
+    <>
+      <div
+        className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] transition-opacity lg:hidden ${
+          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={onCloseMobile}
+      />
 
-          <div className="min-w-0">
-            <div className="text-[11px] tracking-[0.22em] uppercase text-white/60">
-              REPOSITÓRIO
+      <aside
+        className={`
+          rcm-sidebar fixed top-0 left-0 z-50 h-screen w-[300px] max-w-[85vw]
+          overflow-y-auto transition-transform duration-300 ease-out
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+          lg:translate-x-0 lg:sticky lg:top-0 lg:z-30 lg:w-[300px]
+        `}
+      >
+        <div className="p-5 border-b border-white/10">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-12 w-12 rounded-2xl overflow-hidden border border-white/15 bg-black/20 flex items-center justify-center shrink-0 shadow-sm">
+                <img
+                  src="/logo.gif"
+                  alt="Logo"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+
+              <div className="min-w-0">
+                <div className="text-[11px] tracking-[0.28em] uppercase text-white/55">
+                  REPOSITÓRIO
+                </div>
+                <div className="text-white font-extrabold text-xl leading-none mt-1 truncate">
+                  Comercial
+                </div>
+              </div>
             </div>
-            <div className="text-white font-extrabold">Comercial</div>
-          </div>
-        </div>
-      </div>
 
-      <nav className="p-3">
-        {/* Todos os Conteúdos (mesma rota) */}
-        <NavLink
-          to={NAV.todos.path}
-          className={({ isActive }) => (isActive ? "rcm-nav-item-active" : "rcm-nav-item")}
-        >
-          <span>Todos os Conteúdos</span>
-          <span className="rcm-pill-dot" />
-        </NavLink>
-
-        <div className="h-4" />
-
-        {groups.map((g) => (
-          <div key={g.key} className="mb-3">
-            {/* Botão do grupo (mesma lógica open/close) */}
             <button
               type="button"
-              onClick={() => setOpenGroup(openGroup === g.key ? "" : g.key)}
-              className={openGroup === g.key ? "rcm-nav-item-active" : "rcm-nav-item"}
+              onClick={onCloseMobile}
+              className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white transition hover:bg-white/10"
+              aria-label="Fechar menu lateral"
             >
-              <span className="font-semibold">{g.data.label}</span>
-              <span className="rcm-chevron">{openGroup === g.key ? "▾" : "▸"}</span>
+              ✕
             </button>
-
-            {openGroup === g.key ? (
-              <div className="mt-2 grid gap-1 pl-2">
-                {g.data.items.map((it) => (
-                  <NavLink
-                    key={`${g.key}-${it.tipo}`}
-                    to={buildPath(g.key as any, it.tipo)}
-                    className={({ isActive }) =>
-                      isActive ? "rcm-nav-item-active" : "rcm-nav-item"
-                    }
-                  >
-                    <span className="truncate">{it.label}</span>
-                    <span className="rcm-pill-dot" />
-                  </NavLink>
-                ))}
-              </div>
-            ) : null}
           </div>
-        ))}
-      </nav>
-    </aside>
+        </div>
+
+        <nav className="p-3">
+          <div className="mb-2 px-2 text-[11px] uppercase tracking-[0.22em] text-white/40">
+            Navegação
+          </div>
+
+          <NavLink
+            to={NAV.todos.path}
+            onClick={onCloseMobile}
+            className={({ isActive }) =>
+              isActive ? "rcm-nav-item-active" : "rcm-nav-item"
+            }
+          >
+            <span className="text-[15px]">Todos os Conteúdos</span>
+            <span className="rcm-pill-dot" />
+          </NavLink>
+
+          <div className="h-5" />
+
+          <div className="mb-2 px-2 text-[11px] uppercase tracking-[0.22em] text-white/40">
+            Canais
+          </div>
+
+          {groups.map((g) => (
+            <div key={g.key} className="mb-2">
+              <button
+                type="button"
+                onClick={() => setOpenGroup(openGroup === g.key ? "" : g.key)}
+                className={
+                  openGroup === g.key ? "rcm-nav-item-active" : "rcm-nav-item"
+                }
+              >
+                <span className="font-semibold text-[15px]">{g.data.label}</span>
+                <span className="rcm-chevron">
+                  {openGroup === g.key ? "▾" : "▸"}
+                </span>
+              </button>
+
+              {openGroup === g.key ? (
+                <div className="mt-2 ml-2 pl-3 border-l border-white/10 grid gap-1">
+                  {g.data.items.map((it) => (
+                    <NavLink
+                      key={`${g.key}-${it.tipo}`}
+                      to={buildPath(g.key as any, it.tipo)}
+                      onClick={onCloseMobile}
+                      className={({ isActive }) =>
+                        isActive ? "rcm-nav-subitem-active" : "rcm-nav-subitem"
+                      }
+                    >
+                      <span className="truncate text-[14px]">{it.label}</span>
+                      <span className="rcm-pill-dot" />
+                    </NavLink>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </nav>
+      </aside>
+    </>
   );
 }

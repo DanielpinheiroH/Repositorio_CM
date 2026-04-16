@@ -2,24 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== Tema (vinho/bordô) ===== */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  --rcm-bg: #0a0a0c;
-  --rcm-wine-950: #120205;
-  --rcm-wine-900: #1b0308;
-  --rcm-wine-850: #23040a;
-  --rcm-wine-800: #2a050c;
+  --rcm-bg: #f6f3f4;
+  --rcm-surface: #ffffff;
+  --rcm-surface-soft: #fcfafb;
 
-  --rcm-border: rgba(255, 255, 255, 0.08);
-  --rcm-muted: rgba(255, 255, 255, 0.62);
-  --rcm-muted2: rgba(255, 255, 255, 0.45);
+  --rcm-border: #eadfe2;
+  --rcm-text: #1f1720;
+  --rcm-muted: #6f6370;
+  --rcm-muted-2: #9a8e98;
 
   --rcm-red: #d51620;
-  --rcm-red2: #ff2b35;
-  --rcm-red-soft: rgba(213, 22, 32, 0.22);
-  --rcm-red-soft2: rgba(213, 22, 32, 0.12);
+  --rcm-red-dark: #980c16;
+  --rcm-red-deep: #5f0910;
+  --rcm-wine: #3b0b12;
+  --rcm-wine-2: #2a080d;
+  --rcm-wine-3: #21060a;
+
+  --rcm-red-soft: rgba(213, 22, 32, 0.12);
+  --rcm-red-soft-2: rgba(213, 22, 32, 0.18);
 }
 
 html,
@@ -30,93 +33,152 @@ body,
 
 body {
   margin: 0;
-  background: radial-gradient(900px 600px at 20% 0%, rgba(213, 22, 32, 0.10), transparent 60%),
-    radial-gradient(900px 600px at 80% 30%, rgba(213, 22, 32, 0.08), transparent 60%),
-    var(--rcm-bg);
-  color: #e7e7ea;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
-    "Apple Color Emoji", "Segoe UI Emoji";
+  background:
+    radial-gradient(900px 500px at top left, rgba(213, 22, 32, 0.08), transparent 55%),
+    linear-gradient(180deg, #faf7f8 0%, #f4f0f1 100%);
+  color: var(--rcm-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* seleção */
 ::selection {
-  background: rgba(213, 22, 32, 0.35);
-  color: #fff;
+  background: rgba(213, 22, 32, 0.18);
+  color: #2a080d;
 }
 
-/* scrollbar */
 *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
+
 *::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: transparent;
 }
+
 *::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.14);
   border-radius: 999px;
-  border: 2px solid rgba(0, 0, 0, 0.2);
 }
+
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.22);
 }
 
 @layer components {
-  /* Sidebar background no estilo do print */
+    .rcm-nav-icon {
+    @apply w-full h-12 flex items-center justify-center rounded-xl transition-all;
+    color: rgba(255, 255, 255, 0.82);
+    background: transparent;
+  }
+
+  .rcm-nav-icon:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+  }
+
+  .rcm-nav-icon-active {
+    @apply w-full h-12 flex items-center justify-center rounded-xl transition-all;
+    color: #ffffff;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow:
+      0 8px 20px rgba(0, 0, 0, 0.18),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  }
   .rcm-sidebar {
     background:
-      radial-gradient(700px 500px at 50% 0%, rgba(213, 22, 32, 0.10), transparent 55%),
-      linear-gradient(180deg, var(--rcm-wine-900) 0%, var(--rcm-wine-950) 55%, #07070a 100%);
-    border-right: 1px solid rgba(255, 255, 255, 0.06);
+      radial-gradient(500px 280px at top center, rgba(255, 80, 92, 0.18), transparent 60%),
+      linear-gradient(180deg, #4b0d15 0%, #32090f 45%, #24070b 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04);
   }
 
   .rcm-topbar {
-    background: linear-gradient(180deg, #2a050c 0%, #1b0308 100%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  }
-
-  .rcm-section-label {
-    @apply text-[11px] tracking-[0.18em] uppercase;
-    color: rgba(255, 255, 255, 0.50);
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--rcm-border);
   }
 
   .rcm-nav-item {
-    @apply w-full flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm;
-    color: rgba(255, 255, 255, 0.78);
+    @apply w-full flex items-center justify-between gap-3 rounded-xl px-3 py-3 text-sm transition-all;
+    color: rgba(255, 255, 255, 0.82);
+    background: transparent;
   }
 
   .rcm-nav-item:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
   }
 
   .rcm-nav-item-active {
-    @apply w-full flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(213, 22, 32, 0.55);
-    box-shadow: 0 0 0 1px rgba(213, 22, 32, 0.10) inset;
-    color: #fff;
+    @apply w-full flex items-center justify-between gap-3 rounded-xl px-3 py-3 text-sm transition-all;
+    color: #ffffff;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow:
+      0 8px 20px rgba(0, 0, 0, 0.18),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  }
+
+  .rcm-nav-subitem {
+    @apply w-full flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm transition-all;
+    color: rgba(255, 255, 255, 0.68);
+  }
+
+  .rcm-nav-subitem:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+  }
+
+  .rcm-nav-subitem-active {
+    @apply w-full flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm transition-all;
+    color: #ffffff;
+    background: rgba(213, 22, 32, 0.26);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .rcm-pill-dot {
-    @apply h-2 w-2 rounded-full;
+    @apply h-2.5 w-2.5 rounded-full shrink-0;
     background: rgba(255, 255, 255, 0.22);
   }
 
   .rcm-chevron {
-    @apply h-4 w-4 rounded-sm flex items-center justify-center text-[10px];
-    background: rgba(255, 255, 255, 0.10);
-    color: rgba(255, 255, 255, 0.85);
+    @apply h-5 w-5 rounded-md flex items-center justify-center text-[11px] shrink-0;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.92);
   }
 
   .rcm-btn-primary {
-    @apply inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold;
-    background: linear-gradient(180deg, var(--rcm-red2), var(--rcm-red));
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    box-shadow: 0 10px 18px rgba(213, 22, 32, 0.18);
-    color: #fff;
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition-all;
+    background: linear-gradient(180deg, #e11d2e 0%, #c40f1d 100%);
+    color: white;
+    box-shadow: 0 10px 24px rgba(213, 22, 32, 0.22);
   }
 
   .rcm-btn-primary:hover {
-    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(213, 22, 32, 0.28);
+  }
+
+  .rcm-card {
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid var(--rcm-border);
+    box-shadow: 0 10px 30px rgba(34, 20, 26, 0.05);
+    backdrop-filter: blur(8px);
+  }
+
+  .rcm-input {
+    @apply w-full rounded-xl px-3 py-2.5 outline-none transition-all;
+    background: #ffffff;
+    border: 1px solid var(--rcm-border);
+    color: var(--rcm-text);
+  }
+
+  .rcm-input::placeholder {
+    color: #a08f98;
+  }
+
+  .rcm-input:focus {
+    border-color: rgba(213, 22, 32, 0.35);
+    box-shadow: 0 0 0 4px rgba(213, 22, 32, 0.10);
   }
 }

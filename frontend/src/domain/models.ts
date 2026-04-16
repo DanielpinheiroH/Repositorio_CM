@@ -10,11 +10,12 @@ export type ProjetoConteudo = {
 
   visualizacoes?: number | null;
   segmento?: string | null;
-  dataPublicacao?: string | null; // yyyy-mm-dd
+  dataPublicacao?: string | null;
   cliente?: string | null;
 
   link: string;
   descricao?: string | null;
+  imagemUrl?: string | null;
 
-  createdAt: string; // ISO
+  createdAt: string;
 };

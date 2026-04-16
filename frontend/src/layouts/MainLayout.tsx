@@ -10,6 +10,8 @@ import type { ProjetoConteudo } from "../domain/models";
 export function MainLayout() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   const navigate = useNavigate();
 
   async function handleSave(payload: Omit<ProjetoConteudo, "id" | "createdAt">) {
@@ -26,20 +28,32 @@ export function MainLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex">
-      <Sidebar />
+    <div className="min-h-screen bg-[var(--rcm-bg)] text-[var(--rcm-text)] flex">
+      <Sidebar
+        mobileOpen={mobileSidebarOpen}
+        onCloseMobile={() => setMobileSidebarOpen(false)}
+      />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Header onNewProject={() => setOpen(true)} disabled={saving} />
+        <Header
+          onNewProject={() => setOpen(true)}
+          onOpenSidebar={() => setMobileSidebarOpen(true)}
+          disabled={saving}
+        />
 
-        <main className="flex-1 p-4 min-w-0">
+        <main className="flex-1 p-3 md:p-4 lg:p-5 min-w-0">
           <Outlet />
         </main>
 
         <Footer />
       </div>
 
-      <NewProjectModal open={open} onClose={() => setOpen(false)} onSave={handleSave} saving={saving} />
+      <NewProjectModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onSave={handleSave}
+        saving={saving}
+      />
     </div>
   );
 }

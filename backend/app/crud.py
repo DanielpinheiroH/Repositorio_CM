@@ -1,23 +1,32 @@
+from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import select, or_
 from uuid import uuid4
+
 from .models import Conteudo
-from .schemas import ConteudoCreate, ConteudoUpdate
+from .schemas import ConteudoCreate, ConteudoUpdate, ConteudoMetricasUpdate
+from .services.ga4_service import get_views_by_url
 
 
 def create_conteudo(db: Session, payload: ConteudoCreate) -> Conteudo:
+    visualizacoes = payload.visualizacoes
+
     item = Conteudo(
         id=str(uuid4()),
         nome_projeto=payload.nome_projeto.strip(),
         canal=payload.canal.strip(),
         tipo=payload.tipo.strip(),
-        visualizacoes=payload.visualizacoes,
+        visualizacoes=visualizacoes,
         segmento=payload.segmento.strip() if payload.segmento else None,
         data_publicacao=payload.data_publicacao,
         cliente=payload.cliente.strip() if payload.cliente else None,
         link=payload.link.strip(),
         descricao=payload.descricao.strip() if payload.descricao else None,
+        metricas_status="manual" if visualizacoes is not None else "pendente",
+        metricas_origem="manual" if visualizacoes is not None else None,
+        views_atualizadas_em=datetime.now(timezone.utc) if visualizacoes is not None else None,
+        metricas_erro=None,
     )
     db.add(item)
     db.commit()
@@ -67,11 +76,82 @@ def update_conteudo(db: Session, conteudo_id: str, payload: ConteudoUpdate) -> O
         return None
 
     data = payload.model_dump(exclude_unset=True)
+    visualizacoes_foi_atualizada = "visualizacoes" in data
 
     for k, v in data.items():
         if isinstance(v, str):
             v = v.strip()
         setattr(item, k, v)
+
+    if visualizacoes_foi_atualizada:
+        item.metricas_status = "manual"
+        item.metricas_origem = "manual"
+        item.views_atualizadas_em = datetime.now(timezone.utc)
+        item.metricas_erro = None
+
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+def preview_metricas_por_url(url: str) -> dict:
+    try:
+        views = get_views_by_url(url)
+        return {
+            "visualizacoes": views,
+            "metricas_status": "sucesso",
+            "metricas_origem": "ga4",
+            "views_atualizadas_em": datetime.now(timezone.utc),
+            "metricas_erro": None,
+        }
+    except Exception as e:
+        return {
+            "visualizacoes": 0,
+            "metricas_status": "erro",
+            "metricas_origem": "ga4",
+            "views_atualizadas_em": datetime.now(timezone.utc),
+            "metricas_erro": str(e),
+        }
+
+
+def update_conteudo_metricas(
+    db: Session,
+    conteudo_id: str,
+    payload: ConteudoMetricasUpdate,
+) -> Optional[Conteudo]:
+    item = get_conteudo(db, conteudo_id)
+    if not item:
+        return None
+
+    item.visualizacoes = payload.visualizacoes
+    item.metricas_status = payload.metricas_status
+    item.metricas_origem = payload.metricas_origem
+    item.metricas_erro = payload.metricas_erro
+    item.views_atualizadas_em = datetime.now(timezone.utc)
+
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+def atualizar_metricas_por_ga4(db: Session, conteudo_id: str) -> Optional[Conteudo]:
+    item = get_conteudo(db, conteudo_id)
+    if not item:
+        return None
+
+    try:
+        views = get_views_by_url(item.link)
+
+        item.visualizacoes = views
+        item.metricas_status = "sucesso"
+        item.metricas_origem = "ga4"
+        item.metricas_erro = None
+    except Exception as e:
+        item.metricas_status = "erro"
+        item.metricas_origem = "ga4"
+        item.metricas_erro = str(e)
+
+    item.views_atualizadas_em = datetime.now(timezone.utc)
 
     db.commit()
     db.refresh(item)
