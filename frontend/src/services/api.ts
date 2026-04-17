@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://72.60.61.34";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 async function parseOrThrow(res: Response) {
   if (res.ok) {

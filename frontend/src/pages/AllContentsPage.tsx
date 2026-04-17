@@ -527,22 +527,22 @@ export function AllContentsPage() {
   }
 
   async function handleRefreshMetricasFromCard(item: ConteudoComMetricas) {
-  try {
-    const refreshed = await contentStore.updateMetricas(item.id);
+    try {
+      const refreshed = await contentStore.updateMetricas(item.id);
 
-    setRawItems((prev) =>
-      prev.map((current) =>
-        current.id === item.id ? refreshed : current
-      )
-    );
+      setRawItems((prev) =>
+        prev.map((current) =>
+          current.id === item.id ? refreshed : current
+        )
+      );
 
-    if (editing?.id === item.id) {
-      setEditing(refreshed);
+      if (editing?.id === item.id) {
+        setEditing(refreshed);
+      }
+    } catch (e: any) {
+      alert(`Erro ao atualizar métricas: ${String(e?.message || e)}`);
     }
-  } catch (e: any) {
-    alert(`Erro ao atualizar métricas: ${String(e?.message || e)}`);
   }
-}
 
   async function handleDelete(item: ConteudoComMetricas) {
     const ok = confirm(`Excluir "${item.nomeProjeto}"? Essa ação não pode ser desfeita.`);
@@ -685,7 +685,7 @@ export function AllContentsPage() {
 
       {!loading && !err ? (
         <>
-          <div className="hidden grid-cols-1 gap-4 lg:grid xl:grid-cols-2 2xl:grid-cols-3">
+          <div className="hidden lg:grid gap-5 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {items.map((it) => (
               <ContentCard
                 key={it.id}
@@ -694,7 +694,7 @@ export function AllContentsPage() {
                 onEdit={openEdit}
                 onDelete={handleDelete}
                 onRefreshMetricas={handleRefreshMetricasFromCard}
-                imageHeightClass="h-[220px]"
+                imageHeightClass="h-[200px]"
               />
             ))}
 
