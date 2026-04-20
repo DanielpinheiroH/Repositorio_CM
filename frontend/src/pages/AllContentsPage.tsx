@@ -53,11 +53,11 @@ function tiposPorCanal(canal: string): TipoOpt[] {
   }
 
   if (canal === "instagram") {
-    return [
-      { value: "feed-reels", label: "Feed & Reels" },
-      { value: "stories", label: "Stories" },
-    ];
-  }
+  return [
+    { value: "feed", label: "Feed" },
+    { value: "reels", label: "Reels" },
+  ];
+}
 
   return [{ value: "feed", label: "Feed" }];
 }
@@ -685,7 +685,7 @@ export function AllContentsPage() {
 
       {!loading && !err ? (
         <>
-          <div className="hidden lg:grid gap-5 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <div className="hidden lg:grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
             {items.map((it) => (
               <ContentCard
                 key={it.id}

@@ -108,23 +108,25 @@ export function Sidebar({ mobileOpen, onCloseMobile }: Props) {
                 </span>
               </button>
 
-              {openGroup === g.key ? (
-                <div className="mt-2 ml-2 pl-3 border-l border-white/10 grid gap-1">
-                  {g.data.items.map((it) => (
-                    <NavLink
-                      key={`${g.key}-${it.tipo}`}
-                      to={buildPath(g.key as any, it.tipo)}
-                      onClick={onCloseMobile}
-                      className={({ isActive }) =>
-                        isActive ? "rcm-nav-subitem-active" : "rcm-nav-subitem"
-                      }
-                    >
-                      <span className="truncate text-[14px]">{it.label}</span>
-                      <span className="rcm-pill-dot" />
-                    </NavLink>
-                  ))}
-                </div>
-              ) : null}
+             {openGroup === g.key ? (
+  <div className="mt-2 ml-2 pl-3 border-l border-white/10 grid gap-1">
+    {g.data.items
+      
+      .map((it) => (
+        <NavLink
+          key={`${g.key}-${it.tipo}`}
+          to={buildPath(g.key as any, it.tipo)}
+          onClick={onCloseMobile}
+          className={({ isActive }) =>
+            isActive ? "rcm-nav-subitem-active" : "rcm-nav-subitem"
+          }
+        >
+          <span className="truncate text-[14px]">{it.label}</span>
+          <span className="rcm-pill-dot" />
+        </NavLink>
+      ))}
+  </div>
+) : null}
             </div>
           ))}
         </nav>

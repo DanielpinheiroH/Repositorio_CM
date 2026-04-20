@@ -56,12 +56,12 @@ function tiposPorCanal(canal: string) {
     ];
   }
 
-  if (canal === "instagram") {
-    return [
-      { value: "feed-reels", label: "Feed & Reels" },
-      { value: "stories", label: "Stories" },
-    ];
-  }
+ if (canal === "instagram") {
+  return [
+    { value: "feed", label: "Feed" },
+    { value: "reels", label: "Reels" },
+  ];
+}
 
   return [{ value: "feed", label: "Feed" }];
 }
