@@ -305,24 +305,23 @@ export function NewProjectModal({
     alert("Informe o Link.");
     return;
   }
-
+  const imagemFinal = form.imagemUrl?.trim() || null;
   onSave({
-    ...form,
-    nomeProjeto: form.nomeProjeto.trim(),
-    link: form.link.trim(),
-    imagemUrl: form.imagemUrl?.trim() ? form.imagemUrl.trim() : null,
-    segmento: form.segmento?.trim() || "",
-    cliente: form.cliente?.trim() || "",
-    descricao: form.descricao?.trim() || "",
-    dataPublicacao: form.dataPublicacao?.trim() ? form.dataPublicacao : null,
-    visualizacoes:
-      form.visualizacoes === null ||
-      form.visualizacoes === undefined ||
-      Number.isNaN(Number(form.visualizacoes))
-        ? null
-        : Number(form.visualizacoes),
-  });
-}
+  ...form,
+  nomeProjeto: form.nomeProjeto.trim(),
+  link: form.link.trim(),
+  imagemUrl: imagemFinal,
+  segmento: form.segmento?.trim() || "",
+  cliente: form.cliente?.trim() || "",
+  descricao: form.descricao?.trim() || "",
+  dataPublicacao: form.dataPublicacao?.trim() ? form.dataPublicacao : null,
+  visualizacoes:
+    form.visualizacoes === null ||
+    form.visualizacoes === undefined ||
+    Number.isNaN(Number(form.visualizacoes))
+      ? null
+      : Number(form.visualizacoes),
+});
 
   const inputClass =
     "mt-1 w-full rounded-2xl border border-[#e7d9dd] bg-white px-4 py-3 text-[15px] text-[#2b1820] outline-none transition placeholder:text-[#a08f98] focus:border-[#d51620]/40 focus:ring-4 focus:ring-[#d51620]/10";
@@ -653,4 +652,5 @@ export function NewProjectModal({
       </div>
     </div>
   );
+}
 }
