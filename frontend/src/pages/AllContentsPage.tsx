@@ -685,7 +685,7 @@ export function AllContentsPage() {
 
       {!loading && !err ? (
         <>
-          <div className="hidden lg:grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="hidden lg:grid gap-5 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {items.map((it) => (
               <ContentCard
                 key={it.id}

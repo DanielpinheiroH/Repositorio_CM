@@ -11,6 +11,7 @@ export function MainLayout() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(false);
 
   const navigate = useNavigate();
 
@@ -32,6 +33,10 @@ export function MainLayout() {
       <Sidebar
         mobileOpen={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
+        desktopCollapsed={desktopSidebarCollapsed}
+        onToggleDesktop={() =>
+          setDesktopSidebarCollapsed((prev) => !prev)
+        }
       />
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -42,7 +47,11 @@ export function MainLayout() {
         />
 
         <main className="flex-1 p-3 md:p-4 lg:p-5 min-w-0">
-          <Outlet />
+          <Outlet
+            context={{
+              desktopSidebarCollapsed,
+            }}
+          />
         </main>
 
         <Footer />
