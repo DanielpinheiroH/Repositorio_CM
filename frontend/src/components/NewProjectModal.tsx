@@ -284,40 +284,45 @@ export function NewProjectModal({
   }
 
   function submit() {
-    if (!form.nomeProjeto.trim()) {
-      alert("Informe o Nome do Projeto.");
-      return;
-    }
-    if (!String(form.canal || "").trim()) {
-      alert("Selecione o Canal/Página.");
-      return;
-    }
-    if (!String(form.tipo || "").trim()) {
-      alert("Selecione o Tipo.");
-      return;
-    }
-    if (!form.link.trim()) {
-      alert("Informe o Link.");
-      return;
-    }
-
-    onSave({
-      ...form,
-      nomeProjeto: form.nomeProjeto.trim(),
-      link: form.link.trim(),
-      imagemUrl: form.imagemUrl?.trim() ? form.imagemUrl.trim() : null,
-      segmento: form.segmento?.trim() || "",
-      cliente: form.cliente?.trim() || "",
-      descricao: form.descricao?.trim() || "",
-      dataPublicacao: form.dataPublicacao?.trim() ? form.dataPublicacao : null,
-      visualizacoes:
-        form.visualizacoes === null ||
-        form.visualizacoes === undefined ||
-        Number.isNaN(Number(form.visualizacoes))
-          ? null
-          : Number(form.visualizacoes),
-    });
+  if (uploadingImagem) {
+    alert("Aguarde o upload da imagem terminar.");
+    return;
   }
+
+  if (!form.nomeProjeto.trim()) {
+    alert("Informe o Nome do Projeto.");
+    return;
+  }
+  if (!String(form.canal || "").trim()) {
+    alert("Selecione o Canal/Página.");
+    return;
+  }
+  if (!String(form.tipo || "").trim()) {
+    alert("Selecione o Tipo.");
+    return;
+  }
+  if (!form.link.trim()) {
+    alert("Informe o Link.");
+    return;
+  }
+
+  onSave({
+    ...form,
+    nomeProjeto: form.nomeProjeto.trim(),
+    link: form.link.trim(),
+    imagemUrl: form.imagemUrl?.trim() ? form.imagemUrl.trim() : null,
+    segmento: form.segmento?.trim() || "",
+    cliente: form.cliente?.trim() || "",
+    descricao: form.descricao?.trim() || "",
+    dataPublicacao: form.dataPublicacao?.trim() ? form.dataPublicacao : null,
+    visualizacoes:
+      form.visualizacoes === null ||
+      form.visualizacoes === undefined ||
+      Number.isNaN(Number(form.visualizacoes))
+        ? null
+        : Number(form.visualizacoes),
+  });
+}
 
   const inputClass =
     "mt-1 w-full rounded-2xl border border-[#e7d9dd] bg-white px-4 py-3 text-[15px] text-[#2b1820] outline-none transition placeholder:text-[#a08f98] focus:border-[#d51620]/40 focus:ring-4 focus:ring-[#d51620]/10";
@@ -482,12 +487,12 @@ export function NewProjectModal({
                       type="file"
                       accept="image/png,image/jpeg,image/jpg,image/webp"
                       className="mt-1 w-full rounded-2xl border border-[#e7d9dd] bg-white px-4 py-3 text-sm text-[#2b1820] outline-none transition file:mr-3 file:rounded-xl file:border-0 file:bg-[#fff0f2] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#a31320] hover:file:bg-[#ffe5e8]"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          handleUploadImagem(file);
-                        }
-                      }}
+                      onChange={async (e) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    await handleUploadImagem(file);
+  }
+}}
                       disabled={uploadingImagem || saving}
                     />
                     {uploadingImagem ? (
