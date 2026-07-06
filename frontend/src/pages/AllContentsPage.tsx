@@ -32,6 +32,7 @@ function tiposPorCanal(canal: string): TipoOpt[] {
       { value: "feed-reels", label: "Feed & Reels" },
       { value: "stories", label: "Stories" },
       { value: "feed", label: "Feed" },
+      { value: "social-video-testemunhal", label: "Social Video Testemunhal" },
     ];
   }
 
@@ -56,6 +57,7 @@ function tiposPorCanal(canal: string): TipoOpt[] {
   return [
     { value: "feed", label: "Feed" },
     { value: "reels", label: "Reels" },
+    { value: "social-video-testemunhal", label: "Social Video Testemunhal" },
   ];
 }
 
@@ -127,6 +129,10 @@ function getChannelMeta(canal?: string | null) {
         shortName: "Site/Portal",
       };
   }
+}
+
+function getConteudoVinculadoComLink(item: ConteudoComMetricas) {
+  return item.conteudosVinculados?.find((vinculado) => !!vinculado.link);
 }
 
 function channelCardTheme(canal?: string | null) {
@@ -204,6 +210,7 @@ function ContentCard({
 }: ContentCardProps) {
   const theme = channelCardTheme(item.canal);
   const meta = getChannelMeta(item.canal);
+  const conteudoVinculado = getConteudoVinculadoComLink(item);
 
   return (
     <article
@@ -359,9 +366,28 @@ function ContentCard({
           </p>
         )}
 
-        <div className={`mt-4 rounded-2xl border px-3 py-3 text-xs text-[#8f7d86] truncate ${theme.innerSurfaceClass}`}>
-          {item.link}
+        <div className={`mt-4 rounded-2xl border px-3 py-3 ${theme.innerSurfaceClass}`}>
+          <div className="text-[10px] uppercase tracking-[0.14em] text-[#aa8b93]">
+            Link
+          </div>
+          <div className="mt-1 truncate text-xs text-[#8f7d86]">
+            {item.link}
+          </div>
         </div>
+
+        {conteudoVinculado ? (
+          <div className={`mt-3 rounded-2xl border px-3 py-3 ${theme.innerSurfaceClass}`}>
+            <div className="text-[10px] uppercase tracking-[0.14em] text-[#aa8b93]">
+              Conteúdo vinculado
+            </div>
+            <div className="mt-1 truncate text-sm font-semibold text-[#3d2a32]">
+              {conteudoVinculado.nomeProjeto}
+            </div>
+            <div className="mt-1 truncate text-xs text-[#8f7d86]">
+              {conteudoVinculado.link}
+            </div>
+          </div>
+        ) : null}
 
         <div className="mt-4 flex flex-col sm:flex-row gap-2">
           <a
@@ -372,6 +398,17 @@ function ContentCard({
           >
             Abrir Link
           </a>
+
+          {conteudoVinculado ? (
+            <a
+              className="inline-flex flex-1 items-center justify-center rounded-xl border border-[#d51620]/30 bg-[#fff0f2] px-4 py-2.5 text-sm font-semibold text-[#a31320] transition hover:bg-[#ffe4e8]"
+              href={conteudoVinculado.link}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Abrir vinculado
+            </a>
+          ) : null}
 
           {item.canal === "site" && (
             <button
@@ -763,6 +800,7 @@ export function AllContentsPage() {
         metricasOrigem={editing?.metricasOrigem as any}
         viewsAtualizadasEm={editing?.viewsAtualizadasEm ?? null}
         metricasErro={editing?.metricasErro ?? null}
+        currentId={editing?.id}
         initialValue={
           editing
             ? {
@@ -776,6 +814,7 @@ export function AllContentsPage() {
                 link: editing.link,
                 descricao: editing.descricao ?? "",
                 imagemUrl: editing.imagemUrl ?? "",
+                conteudosVinculadosIds: editing.conteudosVinculadosIds ?? [],
               }
             : null
         }

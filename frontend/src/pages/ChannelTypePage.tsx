@@ -19,6 +19,10 @@ function compactUrl(url: string) {
   }
 }
 
+function getConteudoVinculadoComLink(item: ConteudoComMetricas) {
+  return item.conteudosVinculados?.find((vinculado) => !!vinculado.link);
+}
+
 function formatDateBR(value?: string | null) {
   const v = (value || "").trim();
   if (!v) return "";
@@ -323,6 +327,7 @@ export function ChannelTypePage() {
           <div className="hidden lg:grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-4">
             {filteredItems.map((it) => {
               const dataBR = formatDateBR(it.dataPublicacao);
+              const conteudoVinculado = getConteudoVinculadoComLink(it);
               const canRefreshMetricas =
                 it.canal === "site" && it.tipo === "conteudo-de-marca";
 
@@ -414,9 +419,28 @@ export function ChannelTypePage() {
                       </p>
                     )}
 
-                    <div className="mt-4 rounded-xl bg-[#fbf6f7] px-3 py-2 text-[12px] text-[#8d7d86] truncate border border-[#f1e6e9]">
-                      {it.link ? compactUrl(it.link) : ""}
+                    <div className="mt-4 rounded-xl bg-[#fbf6f7] px-3 py-2 border border-[#f1e6e9]">
+                      <div className="text-[10px] uppercase tracking-[0.14em] text-[#aa8b93]">
+                        Link
+                      </div>
+                      <div className="mt-1 truncate text-[12px] text-[#8d7d86]">
+                        {it.link ? compactUrl(it.link) : ""}
+                      </div>
                     </div>
+
+                    {conteudoVinculado ? (
+                      <div className="mt-3 rounded-xl bg-[#fffafb] px-3 py-2 border border-[#f1e6e9]">
+                        <div className="text-[10px] uppercase tracking-[0.14em] text-[#aa8b93]">
+                          Conteúdo vinculado
+                        </div>
+                        <div className="mt-1 truncate text-[12px] font-semibold text-[#3d2a32]">
+                          {conteudoVinculado.nomeProjeto}
+                        </div>
+                        <div className="mt-1 truncate text-[12px] text-[#8d7d86]">
+                          {compactUrl(conteudoVinculado.link)}
+                        </div>
+                      </div>
+                    ) : null}
 
                     <div className="mt-4 flex flex-wrap items-center gap-2">
                       <a
@@ -427,6 +451,17 @@ export function ChannelTypePage() {
                       >
                         Abrir Link
                       </a>
+
+                      {conteudoVinculado ? (
+                        <a
+                          className="inline-flex items-center justify-center rounded-xl border border-[#d51620]/30 bg-[#fff0f2] px-4 py-2 text-sm font-semibold text-[#a31320] transition hover:bg-[#ffe4e8]"
+                          href={conteudoVinculado.link}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Abrir vinculado
+                        </a>
+                      ) : null}
 
                       {canRefreshMetricas ? (
                         <button
@@ -469,6 +504,7 @@ export function ChannelTypePage() {
           <div className="grid grid-cols-1 gap-4 lg:hidden">
             {filteredItems.map((it) => {
               const dataBR = formatDateBR(it.dataPublicacao);
+              const conteudoVinculado = getConteudoVinculadoComLink(it);
               const canRefreshMetricas =
                 it.canal === "site" && it.tipo === "conteudo-de-marca";
 
@@ -560,9 +596,28 @@ export function ChannelTypePage() {
                       </p>
                     )}
 
-                    <div className="mt-4 rounded-xl bg-[#fbf6f7] px-3 py-2 text-[12px] text-[#8d7d86] truncate border border-[#f1e6e9]">
-                      {it.link ? compactUrl(it.link) : ""}
+                    <div className="mt-4 rounded-xl bg-[#fbf6f7] px-3 py-2 border border-[#f1e6e9]">
+                      <div className="text-[10px] uppercase tracking-[0.14em] text-[#aa8b93]">
+                        Link
+                      </div>
+                      <div className="mt-1 truncate text-[12px] text-[#8d7d86]">
+                        {it.link ? compactUrl(it.link) : ""}
+                      </div>
                     </div>
+
+                    {conteudoVinculado ? (
+                      <div className="mt-3 rounded-xl bg-[#fffafb] px-3 py-2 border border-[#f1e6e9]">
+                        <div className="text-[10px] uppercase tracking-[0.14em] text-[#aa8b93]">
+                          Conteúdo vinculado
+                        </div>
+                        <div className="mt-1 truncate text-[12px] font-semibold text-[#3d2a32]">
+                          {conteudoVinculado.nomeProjeto}
+                        </div>
+                        <div className="mt-1 truncate text-[12px] text-[#8d7d86]">
+                          {compactUrl(conteudoVinculado.link)}
+                        </div>
+                      </div>
+                    ) : null}
 
                     <div className="mt-4 flex flex-col sm:flex-row gap-2">
                       <a
@@ -573,6 +628,17 @@ export function ChannelTypePage() {
                       >
                         Abrir Link
                       </a>
+
+                      {conteudoVinculado ? (
+                        <a
+                          className="inline-flex flex-1 items-center justify-center rounded-xl border border-[#d51620]/30 bg-[#fff0f2] px-4 py-2.5 text-sm font-semibold text-[#a31320] transition hover:bg-[#ffe4e8]"
+                          href={conteudoVinculado.link}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Abrir vinculado
+                        </a>
+                      ) : null}
 
                       {canRefreshMetricas ? (
                         <button
@@ -650,6 +716,7 @@ export function ChannelTypePage() {
         metricasOrigem={editing?.metricasOrigem as any}
         viewsAtualizadasEm={editing?.viewsAtualizadasEm ?? null}
         metricasErro={editing?.metricasErro ?? null}
+        currentId={editing?.id}
         initialValue={
           editing
             ? {
@@ -663,6 +730,7 @@ export function ChannelTypePage() {
                 link: editing.link,
                 descricao: editing.descricao ?? "",
                 imagemUrl: editing.imagemUrl ?? "",
+                conteudosVinculadosIds: editing.conteudosVinculadosIds ?? [],
               }
             : null
         }

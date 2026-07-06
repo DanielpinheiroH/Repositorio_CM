@@ -20,9 +20,9 @@ TIPOS_VALIDOS = {
     "big-talk",
     "little-talk",
     "shorts",
-    "feed-reels",
-    "stories",
     "feed",
+    "reels",
+    "social-video-testemunhal",
 }
 
 METRICAS_STATUS_VALIDOS = {
@@ -52,6 +52,7 @@ class ConteudoBase(BaseModel):
     link: str = Field(min_length=1)
     descricao: Optional[str] = None
     imagem_url: Optional[str] = None
+    conteudos_vinculados_ids: list[str] = Field(default_factory=list)
 
     @field_validator("nome_projeto", "canal", "tipo", "link", mode="before")
     @classmethod
@@ -96,6 +97,24 @@ class ConteudoBase(BaseModel):
         return value
 
 
+    @field_validator("conteudos_vinculados_ids", mode="before")
+    @classmethod
+    def normalizar_conteudos_vinculados_ids(cls, value):
+        if value is None:
+            return []
+        if not isinstance(value, list):
+            raise ValueError("Vinculos precisam ser uma lista")
+
+        ids: list[str] = []
+        for item in value:
+            if item is None:
+                continue
+            item = str(item).strip()
+            if item and item not in ids:
+                ids.append(item)
+        return ids
+
+
 class ConteudoCreate(ConteudoBase):
     pass
 
@@ -111,6 +130,7 @@ class ConteudoUpdate(BaseModel):
     link: Optional[str] = None
     descricao: Optional[str] = None
     imagem_url: Optional[str] = None
+    conteudos_vinculados_ids: Optional[list[str]] = None
 
     @field_validator("nome_projeto", "canal", "tipo", "link", mode="before")
     @classmethod
@@ -155,6 +175,24 @@ class ConteudoUpdate(BaseModel):
         if value is not None and value < 0:
             raise ValueError("Visualizações não pode ser negativo")
         return value
+
+
+    @field_validator("conteudos_vinculados_ids", mode="before")
+    @classmethod
+    def normalizar_conteudos_vinculados_ids_update(cls, value):
+        if value is None:
+            return value
+        if not isinstance(value, list):
+            raise ValueError("Vinculos precisam ser uma lista")
+
+        ids: list[str] = []
+        for item in value:
+            if item is None:
+                continue
+            item = str(item).strip()
+            if item and item not in ids:
+                ids.append(item)
+        return ids
 
 
 class ConteudoMetricasUpdate(BaseModel):
@@ -222,12 +260,24 @@ class ConteudoMetricasPreviewOut(BaseModel):
     metricas_erro: Optional[str] = None
 
 
+class ConteudoRelacionadoOut(BaseModel):
+    id: str
+    nome_projeto: str
+    canal: str
+    tipo: str
+    link: str
+
+    class Config:
+        from_attributes = True
+
+
 class ConteudoOut(ConteudoBase):
     id: str
     metricas_status: str
     metricas_origem: Optional[str] = None
     views_atualizadas_em: Optional[datetime] = None
     metricas_erro: Optional[str] = None
+    conteudos_vinculados: list[ConteudoRelacionadoOut] = Field(default_factory=list)
     created_at: datetime
 
     class Config:

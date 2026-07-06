@@ -32,7 +32,17 @@ type ConteudoApi = {
   metricas_origem?: string | null;
   views_atualizadas_em?: string | null;
   metricas_erro?: string | null;
+  conteudos_vinculados?: ConteudoRelacionadoApi[];
+  conteudos_vinculados_ids?: string[];
   created_at: string;
+};
+
+type ConteudoRelacionadoApi = {
+  id: string;
+  nome_projeto: string;
+  canal: string;
+  tipo: string;
+  link: string;
 };
 
 type ConteudoMetricasPreviewApi = {
@@ -61,6 +71,14 @@ function fromApi(x: ConteudoApi): ConteudoComMetricas {
     viewsAtualizadasEm: x.views_atualizadas_em ?? null,
     metricasErro: x.metricas_erro ?? null,
     imagemUrl: x.imagem_url ?? null,
+    conteudosVinculados: (x.conteudos_vinculados ?? []).map((v) => ({
+      id: v.id,
+      nomeProjeto: v.nome_projeto,
+      canal: v.canal as any,
+      tipo: v.tipo as any,
+      link: v.link,
+    })),
+    conteudosVinculadosIds: (x.conteudos_vinculados ?? []).map((v) => v.id),
   };
 }
 
@@ -86,6 +104,7 @@ function toApi(payload: Omit<ProjetoConteudo, "id" | "createdAt">) {
     link: payload.link,
     descricao: payload.descricao ?? null,
     imagem_url: payload.imagemUrl ?? null,
+    conteudos_vinculados_ids: payload.conteudosVinculadosIds ?? [],
   };
 }
 

@@ -15,7 +15,8 @@ export type TipoKey =
   | "little-talk"
   | "shorts"
   | "feed"
-  | "reels";
+  | "reels"
+  | "social-video-testemunhal";
 
 export const NAV = {
   todos: { label: "Todos os Conteúdos", path: "/" },
@@ -45,6 +46,7 @@ export const NAV = {
   items: [
     { tipo: "feed", label: "Feed" },
     { tipo: "reels", label: "Reels" },
+    { tipo: "social-video-testemunhal", label: "Social Video Testemunhal" },
   ],
 },
 

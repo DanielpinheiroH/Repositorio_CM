@@ -1,5 +1,13 @@
 import type { CanalKey, TipoKey } from "./contentTypes";
 
+export type ConteudoRelacionado = {
+  id: string;
+  nomeProjeto: string;
+  canal: CanalKey;
+  tipo: TipoKey;
+  link: string;
+};
+
 export type ProjetoConteudo = {
   id: string;
 
@@ -16,6 +24,8 @@ export type ProjetoConteudo = {
   link: string;
   descricao?: string | null;
   imagemUrl?: string | null;
+  conteudosVinculados?: ConteudoRelacionado[];
+  conteudosVinculadosIds?: string[];
 
   createdAt: string;
 };

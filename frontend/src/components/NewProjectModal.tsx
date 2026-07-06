@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ProjetoConteudo } from "../domain/models";
 import { apiUploadImagem } from "../services/api";
+import { tipoLabel } from "../domain/contentTypes";
+import { contentStore, type ConteudoComMetricas } from "../storage/contentStore";
 
 type Mode = "create" | "edit";
 type FormValue = Omit<ProjetoConteudo, "id" | "createdAt">;
@@ -8,6 +10,7 @@ type FormValue = Omit<ProjetoConteudo, "id" | "createdAt">;
 type Props = {
   open: boolean;
   mode?: Mode;
+  currentId?: string;
   initialValue?: Partial<FormValue> | null;
   onClose: () => void;
   onSave: (payload: FormValue) => void | Promise<void>;
@@ -60,6 +63,7 @@ function tiposPorCanal(canal: string) {
   return [
     { value: "feed", label: "Feed" },
     { value: "reels", label: "Reels" },
+    { value: "social-video-testemunhal", label: "Social Video Testemunhal" },
   ];
 }
 
@@ -77,6 +81,7 @@ const emptyForm: FormValue = {
   link: "",
   descricao: "",
   imagemUrl: "",
+  conteudosVinculadosIds: [],
 };
 
 function formatDateTimeBR(value?: string | null) {
@@ -117,6 +122,7 @@ function metricasBadge(status?: string | null) {
 export function NewProjectModal({
   open,
   mode = "create",
+  currentId,
   initialValue,
   onClose,
   onSave,
@@ -139,6 +145,8 @@ export function NewProjectModal({
   const [autoMetricasErro, setAutoMetricasErro] = useState<string | null>(metricasErro);
   const [autoRefreshing, setAutoRefreshing] = useState(false);
   const [uploadingImagem, setUploadingImagem] = useState(false);
+  const [conteudosParaVinculo, setConteudosParaVinculo] = useState<ConteudoComMetricas[]>([]);
+  const [loadingVinculos, setLoadingVinculos] = useState(false);
 
   const debounceRef = useRef<number | null>(null);
   const lastPreviewUrlRef = useRef<string>("");
@@ -156,6 +164,10 @@ export function NewProjectModal({
         descricao: initialValue.descricao ?? "",
         link: initialValue.link ?? "",
         imagemUrl: initialValue.imagemUrl ?? "",
+        conteudosVinculadosIds:
+          initialValue.conteudosVinculadosIds ??
+          initialValue.conteudosVinculados?.map((item) => item.id) ??
+          [],
         nomeProjeto: initialValue.nomeProjeto ?? "",
         visualizacoes: initialValue.visualizacoes ?? null,
         canal: (initialValue.canal ?? "site") as any,
@@ -173,7 +185,44 @@ export function NewProjectModal({
     lastPreviewUrlRef.current = initialValue?.link?.trim?.() || "";
   }, [open, mode, initialValue, metricasStatus, metricasOrigem, viewsAtualizadasEm, metricasErro]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    async function fetchConteudosParaVinculo() {
+      try {
+        setLoadingVinculos(true);
+        const data = await contentStore.query({});
+        setConteudosParaVinculo(data);
+      } catch {
+        setConteudosParaVinculo([]);
+      } finally {
+        setLoadingVinculos(false);
+      }
+    }
+
+    fetchConteudosParaVinculo();
+  }, [open]);
+
   const tipos = useMemo(() => tiposPorCanal(String(form.canal || "site")), [form.canal]);
+
+  const vinculoOptions = useMemo(() => {
+    const canalAtual = String(form.canal || "");
+    const tipoAtual = String(form.tipo || "");
+
+    return conteudosParaVinculo.filter((item) => {
+      if (item.id === currentId) return false;
+
+      if (canalAtual === "site" && tipoAtual === "conteudo-de-marca") {
+        return item.canal === "instagram" && item.tipo === "social-video-testemunhal";
+      }
+
+      if (canalAtual === "instagram" && tipoAtual === "social-video-testemunhal") {
+        return item.canal === "site" && item.tipo === "conteudo-de-marca";
+      }
+
+      return false;
+    });
+  }, [conteudosParaVinculo, currentId, form.canal, form.tipo]);
 
   useEffect(() => {
     if (!open) return;
@@ -270,6 +319,7 @@ export function NewProjectModal({
       nomeProjeto: form.nomeProjeto.trim(),
       link: form.link.trim(),
       imagemUrl: form.imagemUrl?.trim() ? form.imagemUrl.trim() : null,
+      conteudosVinculadosIds: form.conteudosVinculadosIds ?? [],
       segmento: form.segmento?.trim() || "",
       cliente: form.cliente?.trim() || "",
       descricao: form.descricao?.trim() || "",
@@ -311,6 +361,7 @@ export function NewProjectModal({
   nomeProjeto: form.nomeProjeto.trim(),
   link: form.link.trim(),
   imagemUrl: imagemFinal,
+  conteudosVinculadosIds: form.conteudosVinculadosIds ?? [],
   segmento: form.segmento?.trim() || "",
   cliente: form.cliente?.trim() || "",
   descricao: form.descricao?.trim() || "",
@@ -322,6 +373,7 @@ export function NewProjectModal({
       ? null
       : Number(form.visualizacoes),
 });
+}
 
   const inputClass =
     "mt-1 w-full rounded-2xl border border-[#e7d9dd] bg-white px-4 py-3 text-[15px] text-[#2b1820] outline-none transition placeholder:text-[#a08f98] focus:border-[#d51620]/40 focus:ring-4 focus:ring-[#d51620]/10";
@@ -422,6 +474,34 @@ export function NewProjectModal({
                       {tipos.map((t) => (
                         <option key={t.value} value={t.value}>
                           {t.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className={labelClass}>Conteúdo vinculado</label>
+                    <select
+                      className={inputClass}
+                      value={form.conteudosVinculadosIds?.[0] ?? ""}
+                      onChange={(e) =>
+                        set(
+                          "conteudosVinculadosIds",
+                          e.target.value ? [e.target.value] : [],
+                        )
+                      }
+                      disabled={loadingVinculos || vinculoOptions.length === 0}
+                    >
+                      <option value="">
+                        {loadingVinculos
+                          ? "Carregando conteúdos..."
+                          : vinculoOptions.length
+                            ? "Nenhum vínculo"
+                            : "Nenhum conteúdo compatível encontrado"}
+                      </option>
+                      {vinculoOptions.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.nomeProjeto} - {tipoLabel(item.canal, item.tipo)}
                         </option>
                       ))}
                     </select>
@@ -652,5 +732,4 @@ export function NewProjectModal({
       </div>
     </div>
   );
-}
 }
