@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ProjetoConteudo } from "../domain/models";
 import { apiUploadImagem } from "../services/api";
-import { tipoLabel } from "../domain/contentTypes";
+import { canalLabel, tipoLabel } from "../domain/contentTypes";
 import { contentStore, type ConteudoComMetricas } from "../storage/contentStore";
 
 type Mode = "create" | "edit";
@@ -206,23 +206,10 @@ export function NewProjectModal({
   const tipos = useMemo(() => tiposPorCanal(String(form.canal || "site")), [form.canal]);
 
   const vinculoOptions = useMemo(() => {
-    const canalAtual = String(form.canal || "");
-    const tipoAtual = String(form.tipo || "");
-
-    return conteudosParaVinculo.filter((item) => {
-      if (item.id === currentId) return false;
-
-      if (canalAtual === "site" && tipoAtual === "conteudo-de-marca") {
-        return item.canal === "instagram" && item.tipo === "social-video-testemunhal";
-      }
-
-      if (canalAtual === "instagram" && tipoAtual === "social-video-testemunhal") {
-        return item.canal === "site" && item.tipo === "conteudo-de-marca";
-      }
-
-      return false;
-    });
-  }, [conteudosParaVinculo, currentId, form.canal, form.tipo]);
+    return conteudosParaVinculo
+      .filter((item) => item.id !== currentId)
+      .sort((a, b) => a.nomeProjeto.localeCompare(b.nomeProjeto));
+  }, [conteudosParaVinculo, currentId]);
 
   useEffect(() => {
     if (!open) return;
@@ -501,7 +488,7 @@ export function NewProjectModal({
                       </option>
                       {vinculoOptions.map((item) => (
                         <option key={item.id} value={item.id}>
-                          {item.nomeProjeto} - {tipoLabel(item.canal, item.tipo)}
+                          {item.nomeProjeto} - {canalLabel(item.canal)} / {tipoLabel(item.canal, item.tipo)}
                         </option>
                       ))}
                     </select>
