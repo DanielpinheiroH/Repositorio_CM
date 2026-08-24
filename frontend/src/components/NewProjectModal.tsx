@@ -63,6 +63,7 @@ function tiposPorCanal(canal: string) {
   return [
     { value: "feed", label: "Feed" },
     { value: "reels", label: "Reels" },
+    { value: "react", label: "React" },
     { value: "social-video-testemunhal", label: "Social Video Testemunhal" },
   ];
 }

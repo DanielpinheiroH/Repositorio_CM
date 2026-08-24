@@ -16,6 +16,7 @@ export type TipoKey =
   | "shorts"
   | "feed"
   | "reels"
+  | "react"
   | "social-video-testemunhal";
 
 export const NAV = {
@@ -46,6 +47,7 @@ export const NAV = {
   items: [
     { tipo: "feed", label: "Feed" },
     { tipo: "reels", label: "Reels" },
+    { tipo: "react", label: "React" },
     { tipo: "social-video-testemunhal", label: "Social Video Testemunhal" },
   ],
 },

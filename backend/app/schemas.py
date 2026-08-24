@@ -22,6 +22,7 @@ TIPOS_VALIDOS = {
     "shorts",
     "feed",
     "reels",
+    "react",
     "social-video-testemunhal",
 }
 
