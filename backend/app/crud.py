@@ -93,7 +93,7 @@ def list_conteudos(
             )
         )
 
-    stmt = stmt.order_by(Conteudo.created_at.desc()).limit(limit).offset(offset)
+    stmt = stmt.order_by(Conteudo.created_at.desc(), Conteudo.id.desc()).limit(limit).offset(offset)
     return list(db.execute(stmt).scalars().all())
 
 

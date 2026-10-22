@@ -116,11 +116,20 @@ export const contentStore = {
     if (opts.tipo) params.set("tipo", opts.tipo);
     if (opts.q) params.set("q", opts.q);
 
-    params.set("limit", "200");
-    params.set("offset", "0");
+    const pageSize = 200;
+    const allItems: ConteudoApi[] = [];
 
-    const data = await apiGet<ConteudoApi[]>(`/conteudos?${params.toString()}`);
-    return data.map(fromApi);
+    for (let offset = 0; ; offset += pageSize) {
+      params.set("limit", String(pageSize));
+      params.set("offset", String(offset));
+
+      const page = await apiGet<ConteudoApi[]>(`/conteudos?${params.toString()}`);
+      allItems.push(...page);
+
+      if (page.length < pageSize) break;
+    }
+
+    return allItems.map(fromApi);
   },
 
   async getById(id: string) {
