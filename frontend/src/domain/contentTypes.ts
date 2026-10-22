@@ -9,6 +9,7 @@ export type CanalKey =
 export type TipoKey =
   | "conteudo-de-marca"
   | "artigo-opiniao"
+  | "landing-page"
   | "talks"
   | "one-talk"
   | "big-talk"
@@ -27,6 +28,7 @@ export const NAV = {
     items: [
       { label: "Conteúdo de marca", tipo: "conteudo-de-marca" as const },
       { label: "Artigo de opinião", tipo: "artigo-opiniao" as const },
+      { label: "Landing Page", tipo: "landing-page" as const },
     ],
   },
 

@@ -24,6 +24,7 @@ function tiposPorCanal(canal: string): TipoOpt[] {
     return [
       { value: "conteudo-de-marca", label: "Conteúdo de marca" },
       { value: "artigo-opiniao", label: "Artigo de opinião" },
+      { value: "landing-page", label: "Landing Page" },
       { value: "talks", label: "TALKS" },
       { value: "one-talk", label: "ONE TALK" },
       { value: "big-talk", label: "BIG TALK" },
@@ -40,6 +41,7 @@ function tiposPorCanal(canal: string): TipoOpt[] {
     return [
       { value: "conteudo-de-marca", label: "Conteúdo de marca" },
       { value: "artigo-opiniao", label: "Artigo de opinião" },
+      { value: "landing-page", label: "Landing Page" },
     ];
   }
 

@@ -46,6 +46,7 @@ function tiposPorCanal(canal: string) {
     return [
       { value: "conteudo-de-marca", label: "Conteúdo de marca" },
       { value: "artigo-opiniao", label: "Artigo de opinião" },
+      { value: "landing-page", label: "Landing Page" },
     ];
   }
 

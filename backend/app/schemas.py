@@ -15,6 +15,7 @@ CANAIS_VALIDOS = {
 TIPOS_VALIDOS = {
     "conteudo-de-marca",
     "artigo-opiniao",
+    "landing-page",
     "talks",
     "one-talk",
     "big-talk",
